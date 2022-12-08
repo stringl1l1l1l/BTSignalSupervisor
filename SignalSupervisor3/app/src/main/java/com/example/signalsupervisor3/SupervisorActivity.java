@@ -15,11 +15,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.example.signalsupervisor3.bluetooth.connect.AcceptThread;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectThread;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectedThread;
@@ -54,6 +56,7 @@ public class SupervisorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_supervisor);
         // 初始化
+        BluetoothController.stopDiscovery();
         mBuffer = new byte[BUFFER_SIZE];
         Arrays.fill(mBuffer, (byte) 32);
         mBufferPtr = 0;
@@ -73,7 +76,7 @@ public class SupervisorActivity extends AppCompatActivity {
         btnShowCh1.setOnClickListener(new ShowCH1Listener());
         btnShowCh2.setOnClickListener(new ShowCH2Listener());
         btnDraw.setOnClickListener(new DrawListener());
-        btnClearBuffer.setOnClickListener(new ClearListener());
+        btnClearBuffer.setOnClickListener(new ClearBufferListener());
         btnClearCh1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -110,11 +113,13 @@ public class SupervisorActivity extends AppCompatActivity {
         });
     }
 
-    private class ClearListener implements View.OnClickListener {
+    private class ClearBufferListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            mBuffer = new byte[BUFFER_SIZE];
+            Arrays.fill(mBuffer, (byte) 0);
             mBufferPtr = 0;
+            TextView textHasTrans = findViewById(R.id.text_has_trans);
+            textHasTrans.setText("0");
             showToast(SupervisorActivity.this, "缓冲区已清空");
         }
     }
@@ -145,7 +150,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 // 设置滤波前的幅值稳定后的定值
                 int temLen = GlobalData.sCh1VMaxArray.length;
                 GlobalData.sVMaxCh1 = GlobalData.sCh1VMaxArray[temLen - 1];
-                mConnectedThread.cancel();
+                mConnectedThread.setStopped(true);
                 isRunning = false;
                 showToast(SupervisorActivity.this, "解析成功");
             }
@@ -168,7 +173,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 TextView textCH2Freq = findViewById(R.id.text_CH2_Freq);
                 textCH2VMax.setText(String.valueOf(GlobalData.sCh2VMaxArray[GlobalData.sCh2VMaxArray.length - 1]));
                 textCH2Freq.setText(String.valueOf(GlobalData.sCh2FreqArray[GlobalData.sCh2FreqArray.length - 1]));
-                mConnectedThread.cancel();
+                mConnectedThread.setStopped(true);
                 isRunning = false;
                 showToast(SupervisorActivity.this, "解析成功");
             }
@@ -237,7 +242,7 @@ public class SupervisorActivity extends AppCompatActivity {
     }
 
     private void beginTransfer() {
-        if (!isRunning) {
+        if (mConnectedThread == null) {
             int type = GlobalData.getConnectType();
             // 若本机作为客户端
             if (type == Constant.CLIENT_TYPE) {
@@ -258,7 +263,8 @@ public class SupervisorActivity extends AppCompatActivity {
                 Log.e(TAG, "连接未成功");
             }
         } else {
-            showToast(this, "传输已开始, 请勿重复点击");
+            mConnectedThread.resumeThread();
+            showToast(this, "继续传输");
         }
     }
 
@@ -268,9 +274,9 @@ public class SupervisorActivity extends AppCompatActivity {
         if (GlobalData.getConnectThread() != null)
             GlobalData.getConnectThread().cancel();
         if (mConnectedThread != null)
-            mConnectedThread.cancelTotally();
-        if (mAcceptThread != null)
-            mAcceptThread.cancel();
+            mConnectedThread.cancel();
+        if (GlobalData.getAcceptThread() != null)
+            GlobalData.getAcceptThread().cancel();
         GlobalData.clear();
     }
 
@@ -281,16 +287,19 @@ public class SupervisorActivity extends AppCompatActivity {
                 case Constant.MSG_GOT_DATA:
                     // showToast(SupervisorActivity.this, "data:" + message.obj);
                     // 这里一次传过来的不一定是一个完整的参数,也不能保证只有一个参数
+                    TextView textHasTrans = findViewById(R.id.text_has_trans);
                     for (byte aByte : (byte[]) message.obj) {
                         // 将获取到的数据流全部放入mBuffer里,超过BUFFER_SIZE时断开线程
                         if (mBufferPtr == BUFFER_SIZE) {
-                            mConnectedThread.cancel();
+                            mConnectedThread.setStopped(true);
                             isRunning = false;
                             showToast(SupervisorActivity.this, "缓冲区已满,传输停止,请解析后清空");
+                            textHasTrans.setText(String.valueOf(BUFFER_SIZE));
                             return;
                         }
                         mBuffer[mBufferPtr++] = aByte;
                     }
+                    textHasTrans.setText(String.valueOf(mBufferPtr));
                     Log.i(TAG, "data:" + new String((byte[]) message.obj));
 //                    Log.i(TAG, "data:" + Arrays.toString(String.valueOf(message.obj).getBytes(StandardCharsets.US_ASCII)));
                     Log.i(TAG, "pos: " + mBufferPtr);

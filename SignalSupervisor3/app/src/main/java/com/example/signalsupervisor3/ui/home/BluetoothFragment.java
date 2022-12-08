@@ -255,7 +255,7 @@ public class BluetoothFragment extends Fragment {
                         Log.e(TAG, "空对象");
                     break;
                 case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                    // showToast(mContext, "连接断开");
+                    showToast(mContext, "连接断开");
                     Log.i(TAG, "连接断开");
                     break;
                 default:

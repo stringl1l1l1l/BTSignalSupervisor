@@ -23,8 +23,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.signalsupervisor3.R;
+import com.example.signalsupervisor3.SupervisorActivity;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.example.signalsupervisor3.bluetooth.BluetoothDeviceAdapter;
+import com.example.signalsupervisor3.bluetooth.connect.Constant;
 import com.example.signalsupervisor3.databinding.FragmentDashboardBinding;
 import com.example.signalsupervisor3.ui.home.BluetoothFragment;
 import com.example.signalsupervisor3.utils.AppUtils;

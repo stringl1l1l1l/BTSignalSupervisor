@@ -23,15 +23,12 @@ import java.util.UUID;
 public class ConnectThread extends Thread {
     private static final UUID MY_UUID = UUID.fromString(Constant.CONNECTTION_UUID);
     private static final String TAG = ConnectThread.class.getSimpleName();
-    private final BluetoothDevice mmDevice;
     private final Handler mHandler;
     private BluetoothSocket mBluetoothSocket;
-    private ConnectedThread mConnectedThread;
 
     public ConnectThread(BluetoothDevice device, Handler handler) {
         // U将一个临时对象分配给mmSocket，因为mmSocket是最终的
         BluetoothSocket tmp = null;
-        mmDevice = device;
         mHandler = handler;
         // 用BluetoothSocket连接到给定的蓝牙设备
         try {
@@ -73,8 +70,6 @@ public class ConnectThread extends Thread {
 
     private void manageConnectedSocket(BluetoothSocket mmSocket) {
         mHandler.sendEmptyMessage(Constant.MSG_CONNECTED_TO_SERVER);
-//        mConnectedThread = new ConnectedThread(mmSocket, mHandler);
-//        mConnectedThread.start();
     }
 
 
@@ -85,16 +80,7 @@ public class ConnectThread extends Thread {
         try {
             mBluetoothSocket.close();
         } catch (IOException e) {
-        }
-    }
-
-
-    /**
-     * 发送数据
-     */
-    public void sendData(byte[] data) {
-        if (mConnectedThread != null) {
-            mConnectedThread.write(data);
+            Log.e(TAG, "error: " + e.toString());
         }
     }
 

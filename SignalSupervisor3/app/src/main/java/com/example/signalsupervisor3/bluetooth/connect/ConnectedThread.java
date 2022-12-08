@@ -20,6 +20,7 @@ public class ConnectedThread extends Thread {
     private final DataInputStream mmInStream;
     private final OutputStream mmOutStream;
     private final Handler mHandler;
+    private boolean isStopped = false;
     private byte[] mBuffer = new byte[GlobalData.BUFFER_SIZE];  // 用于流的缓冲存储
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
@@ -38,20 +39,29 @@ public class ConnectedThread extends Thread {
         mmOutStream = tmpOut;
     }
 
+    public boolean isStopped() {
+        return isStopped;
+    }
+
+    public void setStopped(boolean stopped) {
+        isStopped = stopped;
+    }
 
     public void run() {
         // 持续监听InputStream，直到出现异常
+        
         while (true) {
             try {
-//                if (this.isInterrupted()) {
-//                    return;
-//                }
+                if (this.isStopped) {
+                    synchronized (this) {
+                        wait();
+                    }
+                }
                 // 从InputStream读取数据
                 mmInStream.readFully(mBuffer);
                 // 将获得的bytes发送到UI层activity
                 Message message = mHandler.obtainMessage(Constant.MSG_GOT_DATA, mBuffer);
                 mHandler.sendMessage(message);
-                Log.d(TAG, "message size");
             } catch (Exception e) {
                 Log.e(TAG, "error", e);
                 mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
@@ -71,30 +81,25 @@ public class ConnectedThread extends Thread {
         }
     }
 
-    public void clearSocketBuffer() {
+    public synchronized void resumeThread() {
         try {
-            if (mmOutStream != null)
-                mmOutStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+            synchronized (this) {
+                notify();
+                isStopped = false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "error", e);
         }
     }
 
     /**
      * 在main中调用此函数，断开连接
      */
-    public synchronized void cancel() {
-        try {
-//            this.interrupt();
-            this.wait();
-        } catch (Exception e) {
-            Log.e(TAG, "error", e);
-        }
-    }
-
-    public void cancelTotally() {
+    public void cancel() {
         try {
             mmSocket.close();
+            mmInStream.close();
+            mmOutStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
