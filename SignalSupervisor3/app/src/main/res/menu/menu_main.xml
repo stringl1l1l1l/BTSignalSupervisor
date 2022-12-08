@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity" >
+
+    <item
+        android:id="@+id/enable_visibility"
+        android:title="@string/visibility"
+        android:orderInCategory="1" />
+
+    <item
+        android:id="@+id/find_device"
+        android:title="@string/find_device"
+        android:orderInCategory="2" />
+    <item
+        android:id="@+id/cancel_allThread"
+        android:title="@string/cancel_allThread"
+        android:orderInCategory="3" />
+
+</menu>

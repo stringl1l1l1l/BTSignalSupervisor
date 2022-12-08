@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--声明属性集合的名称-->
+    <declare-styleable name="CanvasView">
+        <!--声明属性名称，和取值类型-->
+        <!--        <attr name="default_size" format="dimension" />-->
+    </declare-styleable>
+</resources>

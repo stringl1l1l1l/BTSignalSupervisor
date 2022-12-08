@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">spp蓝牙波形处理</string>
+    <string name="title_activity_main">主界面</string>
+    <string name="title_home">搜索</string>
+    <string name="title_dashboard">已配对</string>
+    <string name="visibility">打开可见性</string>
+    <string name="find_device">查找设备</string>
+    <string name="title_activity_supervisor">波形监视</string>
+    <string name="supervisor_graphTitle">幅频特性绘制</string>
+    <string name="cancel_allThread">断开所有连接</string>
+    <string name="cur_buffer_size">3000</string>
+</resources>
