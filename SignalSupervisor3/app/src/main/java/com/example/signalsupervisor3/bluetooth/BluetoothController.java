@@ -14,20 +14,21 @@ import java.util.List;
 
 public class BluetoothController {
     private static final String TAG = BluetoothController.class.getSimpleName();
-    private BluetoothAdapter mBluetoothAdapter;
+    private static final BluetoothAdapter mBluetoothAdapter;
 
-    public BluetoothController() {
+
+    static {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
-    public BluetoothAdapter getBluetoothAdapter() {
+    public static BluetoothAdapter getBluetoothAdapter() {
         return mBluetoothAdapter;
     }
 
     /**
      * 打开蓝牙
      */
-    public void turnOnBlueTooth(Activity activity, int requestCode) {
+    public static void turnOnBlueTooth(Activity activity, int requestCode) {
         // 若蓝牙未开启
         if (!mBluetoothAdapter.isEnabled()) {
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -39,7 +40,7 @@ public class BluetoothController {
     /**
      * 打开蓝牙可见性
      */
-    public void enableVisibily(Context context) {
+    public static void enableVisibily(Context context) {
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         // 设置可见时间为300s
         intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
@@ -50,7 +51,7 @@ public class BluetoothController {
     /**
      * 查找设备
      */
-    public void startDiscovery() {
+    public static void startDiscovery() {
         //关闭正在进行的服务查找
         if (mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
@@ -62,12 +63,12 @@ public class BluetoothController {
     /**
      * 获取已绑定设备
      */
-    public List<BluetoothDevice> getBondedDeviceList() {
+    public static List<BluetoothDevice> getBondedDeviceList() {
         assert (mBluetoothAdapter != null);
         return new ArrayList<>(mBluetoothAdapter.getBondedDevices());
     }
 
-    public void stopDiscovery() {
+    public static void stopDiscovery() {
         if (mBluetoothAdapter != null) {
             mBluetoothAdapter.cancelDiscovery();
         }

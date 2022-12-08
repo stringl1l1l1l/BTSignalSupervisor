@@ -44,8 +44,8 @@ public class ConnectThread extends Thread {
     }
 
     public void run() {
-        // 搜索占用资源大，关掉提高速度
-        // mBluetoothAdapter.cancelDiscovery();
+        //搜索占用资源大，关掉提高速度
+        BluetoothController.stopDiscovery();
         try {
             if (mBluetoothSocket.isConnected())
                 cancel();

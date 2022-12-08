@@ -36,6 +36,7 @@ public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDevice
     private Context mContext;
     private Handler mHandler;
     private List<BluetoothDevice> mDeviceList;
+    private Thread mConnectingThread;
 
     public BluetoothDeviceAdapter(Context context, List<BluetoothDevice> deviceList) {
         this.mContext = context;
@@ -57,57 +58,28 @@ public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDevice
                 ConnectThread connectThread = new ConnectThread(device, mHandler);
                 connectThread.start();
                 showToast(mContext, "正在连接……");
-                new Thread(new Runnable() {
+                mConnectingThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            Thread.sleep(3500);
+                            synchronized (mConnectingThread) {
+                                if (!connectThread.getSocket().isConnected())
+                                    mConnectingThread.wait(GlobalData.CONNECT_TIME_MS);
+                                if (connectThread.getSocket().isConnected()) {
+                                    GlobalData.setConnectThread(connectThread);
+                                    Intent intent = new Intent(mContext, SupervisorActivity.class);
+                                    mContext.startActivity(intent);
+                                } else {
+                                    connectThread.cancel();
+                                    mHandler.sendEmptyMessage(Constant.CONNECT_FAIL);
+                                }
+                            }
                         } catch (InterruptedException e) {
                             Log.e(TAG, "error", e);
                         }
-                        if (connectThread.getSocket().isConnected()) {
-                            GlobalData.setConnectThread(connectThread);
-                            Intent intent = new Intent(mContext, SupervisorActivity.class);
-                            mContext.startActivity(intent);
-                        } else {
-                            mHandler.sendEmptyMessage(Constant.CONNECT_FAIL);
-//                                showToast(mContext, "连接失败,请重试");
-                        }
                     }
-                }).start();
-                // 连接成功后再跳转
-//                Object lock = new Object();
-//                synchronized (lock) {
-//                    try {
-//                        // 主线程暂停6s
-//                        lock.wait(6000);
-//                        // 开启新线程轮询是否连接成功，成功后唤醒主线程
-//                        new Thread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                while (!connectThread.getSocket().isConnected()) {
-//                                    try {
-//                                        Thread.sleep(100);
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                                lock.notify();
-//                            }
-//                        }).start();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                if (connectThread.getSocket().isConnected()) {
-//                    GlobalData.setConnectThread(connectThread);
-//                    Intent intent = new Intent(mContext, SupervisorActivity.class);
-//                    mContext.startActivity(intent);
-//                } else {
-//                    Log.i(TAG, "未连接");
-//                    // mHandler.sendEmptyMessage(Constant.CONNECT_FAIL);
-//                    showToast(mContext, "连接失败,请重试");
-//                }
+                });
+                mConnectingThread.start();
             }
         });
         return holder;
@@ -158,14 +130,15 @@ public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDevice
                     Log.i(TAG, "data:" + message.obj);
                     break;
                 case Constant.MSG_ERROR:
+                    showToast(mContext, "连接失败,请重试");
                     Log.e(TAG, "error:" + message.obj);
                     break;
                 case Constant.MSG_CONNECTED_TO_SERVER:
+                    synchronized (mConnectingThread) {
+                        mConnectingThread.notify();
+                    }
                     Log.i(TAG, "已连接到服务端");
                     showToast(mContext, "已连接到服务端");
-                    break;
-                case Constant.MSG_GOT_A_CLINET:
-                    showToast(mContext, "已连接到客户端");
                     break;
                 case Constant.CONNECT_FAIL:
                     showToast(mContext, "连接失败,请重试");

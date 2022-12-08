@@ -60,7 +60,6 @@ public class BluetoothFragment extends Fragment {
     private Context mContext;
     private Activity mActivity;
     private View view;
-    private BluetoothController mBluetoothController = new BluetoothController();
     private List<BluetoothDevice> mDeviceList = new ArrayList<>();
     private Set<BluetoothDevice> mSearchedDevSet = new HashSet<>();
     private BluetoothReceiver mBluetoothReceiver;
@@ -109,11 +108,11 @@ public class BluetoothFragment extends Fragment {
         mBluetoothReceiver = new BluetoothReceiver();
         mActivity.registerReceiver(mBluetoothReceiver, filter);
         //打开蓝牙
-        mBluetoothController.turnOnBlueTooth(mActivity, REQUEST_ENABLE_BT);
+        BluetoothController.turnOnBlueTooth(mActivity, REQUEST_ENABLE_BT);
         //进行搜索
-        mBluetoothController.startDiscovery();
+        BluetoothController.startDiscovery();
         //监听客户端连接
-        AcceptThread acceptThread = new AcceptThread(mBluetoothController.getBluetoothAdapter(), mHandler);
+        AcceptThread acceptThread = new AcceptThread(BluetoothController.getBluetoothAdapter(), mHandler);
         acceptThread.start();
     }
 
@@ -142,14 +141,13 @@ public class BluetoothFragment extends Fragment {
             public boolean onMenuItemClick(MenuItem item) {
                 onContextItemSelected(item);
                 int id = item.getItemId();
-                BluetoothController mBluetoothController = new BluetoothController();
                 if (id == R.id.enable_visibility) {
-                    mBluetoothController.enableVisibily(mContext);
+                    BluetoothController.enableVisibily(mContext);
                     Log.i(TAG, "点击打开可见性");
                 } else if (id == R.id.find_device) {
                     //mDeviceList = mBluetoothController.getBondedDeviceList();
                     mDeviceList.clear();
-                    mBluetoothController.startDiscovery();
+                    BluetoothController.startDiscovery();
                     Log.i(TAG, "点击查找设备");
                 } else if (id == R.id.cancel_allThread) {
                     //mDeviceList = mBluetoothController.getBondedDeviceList();
@@ -189,7 +187,7 @@ public class BluetoothFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         //关闭服务查找
-        mBluetoothController.stopDiscovery();
+        BluetoothController.stopDiscovery();
         mContext.unregisterReceiver(mBluetoothReceiver);
     }
 

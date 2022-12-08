@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.example.signalsupervisor3.GlobalData;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,9 +17,10 @@ import java.util.Arrays;
 public class ConnectedThread extends Thread {
     private static final String TAG = ConnectedThread.class.getSimpleName();
     private final BluetoothSocket mmSocket;
-    private final InputStream mmInStream;
+    private final DataInputStream mmInStream;
     private final OutputStream mmOutStream;
     private final Handler mHandler;
+    private byte[] mBuffer = new byte[GlobalData.BUFFER_SIZE];  // 用于流的缓冲存储
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
         mmSocket = socket;
@@ -32,35 +34,24 @@ public class ConnectedThread extends Thread {
         } catch (IOException e) {
             Log.e(TAG, "error", e);
         }
-        mmInStream = tmpIn;
+        mmInStream = new DataInputStream(tmpIn);
         mmOutStream = tmpOut;
     }
 
 
     public void run() {
-        byte[] buffer = new byte[256];  // 用于流的缓冲存储
-        Arrays.fill(buffer, (byte) 0x00);
-        int bytes; // 从read()返回字节数
         // 持续监听InputStream，直到出现异常
         while (true) {
             try {
-                if (this.isInterrupted())
-                    return;
+//                if (this.isInterrupted()) {
+//                    return;
+//                }
                 // 从InputStream读取数据
-                bytes = mmInStream.read(buffer);
+                mmInStream.readFully(mBuffer);
                 // 将获得的bytes发送到UI层activity
-
-                if (bytes > 0) {
-//                    Message message =
-//                            mHandler.obtainMessage(Constant.MSG_GOT_DATA,
-//                                    new String(buffer, 0, bytes, StandardCharsets.US_ASCII));
-                    byte[] temp = new byte[bytes];
-                    System.arraycopy(buffer, 0, temp, 0, bytes);
-                    Message message =
-                            mHandler.obtainMessage(Constant.MSG_GOT_DATA, temp);
-                    mHandler.sendMessage(message);
-                }
-                Log.d(TAG, "message size" + bytes);
+                Message message = mHandler.obtainMessage(Constant.MSG_GOT_DATA, mBuffer);
+                mHandler.sendMessage(message);
+                Log.d(TAG, "message size");
             } catch (Exception e) {
                 Log.e(TAG, "error", e);
                 mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
@@ -80,12 +71,22 @@ public class ConnectedThread extends Thread {
         }
     }
 
+    public void clearSocketBuffer() {
+        try {
+            if (mmOutStream != null)
+                mmOutStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 在main中调用此函数，断开连接
      */
-    public void cancel() {
+    public synchronized void cancel() {
         try {
-            this.interrupt();
+//            this.interrupt();
+            this.wait();
         } catch (Exception e) {
             Log.e(TAG, "error", e);
         }

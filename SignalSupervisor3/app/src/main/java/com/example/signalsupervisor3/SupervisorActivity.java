@@ -32,7 +32,7 @@ import java.util.Arrays;
 
 public class SupervisorActivity extends AppCompatActivity {
     private static final String TAG = SupervisorActivity.class.getSimpleName();
-    private static int BUFFER_SIZE = GlobalData.PARAM_MAX_SIZE * 500;
+    private static int BUFFER_SIZE = GlobalData.BUFFER_SIZE * 10;
     private ConnectThread mConnectThread;
     private BluetoothSocket mBluetoothSocket;
     private BluetoothDevice mBluetoothDevice;
@@ -240,14 +240,14 @@ public class SupervisorActivity extends AppCompatActivity {
         if (!isRunning) {
             int type = GlobalData.getConnectType();
             // 若本机作为客户端
-            if (type == GlobalData.CLIENT_TYPE) {
+            if (type == Constant.CLIENT_TYPE) {
                 mConnectThread = GlobalData.getConnectThread();
                 mBluetoothSocket = mConnectThread.getSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
                 mConnectedThread.start();
                 isRunning = true;
                 showToast(this, "开始接收");
-            } else if (type == GlobalData.SERVER_TYPE) {
+            } else if (type == Constant.SERVER_TYPE) {
                 mAcceptThread = GlobalData.getAcceptThread();
                 mBluetoothSocket = mAcceptThread.getBluetoothSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
@@ -281,8 +281,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 case Constant.MSG_GOT_DATA:
                     // showToast(SupervisorActivity.this, "data:" + message.obj);
                     // 这里一次传过来的不一定是一个完整的参数,也不能保证只有一个参数
-                    byte[] bytes = (byte[]) message.obj;
-                    for (byte aByte : bytes) {
+                    for (byte aByte : (byte[]) message.obj) {
                         // 将获取到的数据流全部放入mBuffer里,超过BUFFER_SIZE时断开线程
                         if (mBufferPtr == BUFFER_SIZE) {
                             mConnectedThread.cancel();
@@ -292,7 +291,7 @@ public class SupervisorActivity extends AppCompatActivity {
                         }
                         mBuffer[mBufferPtr++] = aByte;
                     }
-                    Log.i(TAG, "data:" + new String(bytes));
+                    Log.i(TAG, "data:" + new String((byte[]) message.obj));
 //                    Log.i(TAG, "data:" + Arrays.toString(String.valueOf(message.obj).getBytes(StandardCharsets.US_ASCII)));
                     Log.i(TAG, "pos: " + mBufferPtr);
                     break;

@@ -33,4 +33,12 @@ public class Constant {
      * 连接失败
      */
     public static final int CONNECT_FAIL = -2;
+    /**
+     * 作为客户端连接
+     */
+    public static final int CLIENT_TYPE = 6;
+    /**
+     * 作为服务端连接
+     */
+    public static final int SERVER_TYPE = 7;
 }
