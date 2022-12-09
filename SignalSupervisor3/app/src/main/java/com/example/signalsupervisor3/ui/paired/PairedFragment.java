@@ -12,16 +12,22 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.signalsupervisor3.GlobalData;
 import com.example.signalsupervisor3.R;
 import com.example.signalsupervisor3.SupervisorActivity;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
@@ -31,6 +37,7 @@ import com.example.signalsupervisor3.databinding.FragmentDashboardBinding;
 import com.example.signalsupervisor3.ui.home.BluetoothFragment;
 import com.example.signalsupervisor3.utils.AppUtils;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,6 +114,54 @@ public class PairedFragment extends Fragment {
         recyclerview.addItemDecoration(new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL));
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        //这里设置另外的menu
+        menu.clear();
+        inflater.inflate(R.menu.menu_main, menu);
+        //通过反射让menu的图标可见
+        if (menu.getClass() == MenuBuilder.class) {
+            try {
+                Method m = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
+                m.setAccessible(true);
+                m.invoke(menu, true);
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
+        //这一行不能忘，否则看不到图标
+        //拿到ActionBar后，可以进行设置
+        ((AppCompatActivity) mContext).getSupportActionBar();
+
+        //菜单项点击监听器
+        MenuItem.OnMenuItemClickListener listener = new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                onContextItemSelected(item);
+                int id = item.getItemId();
+                if (id == R.id.enable_visibility) {
+                    BluetoothController.enableVisibily(mContext);
+                    Log.i(TAG, "点击打开可见性");
+                } else if (id == R.id.find_device) {
+                    //mDeviceList = mBluetoothController.getBondedDeviceList();
+                    mDeviceList.clear();
+                    BluetoothController.startDiscovery();
+                    Log.i(TAG, "点击查找设备");
+                } else if (id == R.id.cancel_allThread) {
+                    //mDeviceList = mBluetoothController.getBondedDeviceList();
+                    if (GlobalData.getConnectThread() != null)
+                        GlobalData.getConnectThread().cancel();
+                    else
+                        showToast(mContext, "没有可用的连接");
+                }
+                return true;
+            }
+        };
+        for (int i = 0, n = menu.size(); i < n; i++)
+            menu.getItem(i).setOnMenuItemClickListener(listener);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+    
     private class BluetoothReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

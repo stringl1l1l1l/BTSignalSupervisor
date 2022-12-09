@@ -17,7 +17,8 @@ import java.util.concurrent.Executors;
 
 public class GlobalData extends Application {
     public static int CONNECT_TIME_MS = 6000;
-    public static int BUFFER_SIZE = 256;
+    public static int TEMP_BUFFER_SIZE = 256;
+    public static int BUFFER_SIZE = TEMP_BUFFER_SIZE * 20;
     public static String FREQ_REGEX = "[0-9]{1,4}.[0-9]";
     public static String VOL_REGEX = "[0-3].[0-9]{3}";
     public static String SPLIT_REGEX = " +";

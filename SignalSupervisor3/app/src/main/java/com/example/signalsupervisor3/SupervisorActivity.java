@@ -34,7 +34,7 @@ import java.util.Arrays;
 
 public class SupervisorActivity extends AppCompatActivity {
     private static final String TAG = SupervisorActivity.class.getSimpleName();
-    private static int BUFFER_SIZE = GlobalData.BUFFER_SIZE * 10;
+    private static int BUFFER_SIZE = GlobalData.BUFFER_SIZE;
     private ConnectThread mConnectThread;
     private BluetoothSocket mBluetoothSocket;
     private BluetoothDevice mBluetoothDevice;
@@ -263,6 +263,8 @@ public class SupervisorActivity extends AppCompatActivity {
                 Log.e(TAG, "连接未成功");
             }
         } else {
+            // 跳过当前输入流缓冲区，实现实时传输
+            mConnectedThread.skipInputBuffer();
             mConnectedThread.resumeThread();
             showToast(this, "继续传输");
         }

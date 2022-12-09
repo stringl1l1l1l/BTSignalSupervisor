@@ -21,7 +21,7 @@ public class ConnectedThread extends Thread {
     private final OutputStream mmOutStream;
     private final Handler mHandler;
     private boolean isStopped = false;
-    private byte[] mBuffer = new byte[GlobalData.BUFFER_SIZE];  // 用于流的缓冲存储
+    private byte[] mBuffer = new byte[GlobalData.TEMP_BUFFER_SIZE];  // 用于流的缓冲存储
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
         mmSocket = socket;
@@ -49,7 +49,7 @@ public class ConnectedThread extends Thread {
 
     public void run() {
         // 持续监听InputStream，直到出现异常
-        
+        skipInputBuffer();
         while (true) {
             try {
                 if (this.isStopped) {
@@ -67,6 +67,17 @@ public class ConnectedThread extends Thread {
                 mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
                 break;
             }
+        }
+    }
+
+    public void skipInputBuffer() {
+
+        try {
+            while (mmInStream.available() != 0) {
+                mmInStream.skip(mmInStream.available());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
