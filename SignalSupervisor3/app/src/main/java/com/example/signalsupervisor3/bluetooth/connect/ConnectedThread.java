@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.example.signalsupervisor3.GlobalData;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +50,7 @@ public class ConnectedThread extends Thread {
 
     public void run() {
         // 持续监听InputStream，直到出现异常
-        skipInputBuffer();
+//        skipInputBuffer();
         while (true) {
             try {
                 if (this.isStopped) {
@@ -58,9 +59,9 @@ public class ConnectedThread extends Thread {
                     }
                 }
                 // 从InputStream读取数据
-                mmInStream.readFully(mBuffer);
+                byte oneByte = mmInStream.readByte();
                 // 将获得的bytes发送到UI层activity
-                Message message = mHandler.obtainMessage(Constant.MSG_GOT_DATA, mBuffer);
+                Message message = mHandler.obtainMessage(Constant.MSG_GOT_DATA, oneByte);
                 mHandler.sendMessage(message);
             } catch (Exception e) {
                 Log.e(TAG, "error", e);
@@ -70,16 +71,15 @@ public class ConnectedThread extends Thread {
         }
     }
 
-    public void skipInputBuffer() {
-
-        try {
-            while (mmInStream.available() != 0) {
-                mmInStream.skip(mmInStream.available());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void skipInputBuffer() {
+//        try {
+//            while (mmInStream.available() != 0) {
+//                mmInStream.readByte();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /**
      * 在main中调用此函数，将数据发送到远端设备中

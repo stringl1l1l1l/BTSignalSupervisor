@@ -43,7 +43,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="4"
             android:divider="@drawable/divider_line_3dp"
             android:orientation="vertical"
             android:showDividers="middle">
@@ -56,36 +56,50 @@
                 android:showDividers="middle">
 
                 <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center_vertical">
 
-                    <TextView android:text="滤波前-幅值      " />
+                    <TextView
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:text="@string/text_row1_field" />
 
                     <TextView
+                        android:layout_weight="2"
                         android:id="@+id/text_CH1_VMax"
+                        android:textStyle="bold"
                         android:gravity="center_horizontal"
-                        android:hint="0" />
+                        android:text="0" />
 
                     <TextView
-                        android:gravity="right"
-                        android:hint="V" />
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="V" />
                 </TableRow>
 
                 <TableRow
                     android:layout_weight="1"
                     android:gravity="center_vertical">
 
-                    <TextView android:text="滤波前-频率         " />
+                    <TextView
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:text="@string/text_row2_field" />
 
                     <TextView
 
                         android:id="@+id/text_CH1_Freq"
+                        android:layout_weight="2"
+                        android:textStyle="bold"
                         android:gravity="center_horizontal"
-                        android:hint="0" />
+                        android:text="0" />
 
                     <TextView
-                        android:gravity="right"
-                        android:hint="Hz" />
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Hz" />
                 </TableRow>
 
 
@@ -100,39 +114,50 @@
                 android:showDividers="middle">
 
                 <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center_vertical">
 
-                    <TextView android:text="滤波后-幅值      " />
+                    <TextView
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:text="@string/text_row3_field" />
 
                     <TextView
+                        android:layout_weight="2"
                         android:id="@+id/text_CH2_VMax"
+                        android:textStyle="bold"
                         android:gravity="center_horizontal"
-                        android:hint="0" />
+                        android:text="0" />
 
                     <TextView
-                        android:gravity="right"
-                        android:hint="V" />
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="V" />
                 </TableRow>
 
                 <TableRow
-                    android:id="@+id/row4"
                     android:layout_weight="1"
                     android:gravity="center_vertical">
 
-                    <TextView android:text="滤波后-频率         " />
+                    <TextView
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:text="@string/text_row4_field" />
 
                     <TextView
-
                         android:id="@+id/text_CH2_Freq"
+                        android:layout_weight="2"
+                        android:textStyle="bold"
                         android:gravity="center_horizontal"
-                        android:hint="0" />
+                        android:text="0" />
 
                     <TextView
-                        android:gravity="right"
-                        android:hint="Hz" />
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Hz" />
                 </TableRow>
-
             </TableLayout>
 
             <TableLayout
@@ -152,6 +177,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="left"
+                        android:textSize="10sp"
                         android:text="当前已读取" />
 
                     <TextView
@@ -181,7 +207,7 @@
             android:layout_marginStart="3dp"
             android:layout_marginEnd="3dp"
             android:layout_marginBottom="3dp"
-            android:layout_weight="1"
+            android:layout_weight="4"
             android:stretchColumns="0">
 
             <!--            <TableRow-->
@@ -225,22 +251,12 @@
                     android:text="开始\n读取" />
 
                 <Button
-                    android:id="@+id/btn_clear_buffer"
+                    android:id="@+id/btn_stop_trans"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="清除\n缓冲区" />
+                    android:text="暂停\n读取" />
 
-                <!--                <Button-->
-                <!--                    android:id="@+id/btn_ch2_begin"-->
-                <!--                    android:layout_width="wrap_content"-->
-                <!--                    android:layout_weight="1"-->
-                <!--                    android:text="开始接收滤波后" />-->
 
-                <!--                <Button-->
-                <!--                    android:id="@+id/btn_ch1_draw"-->
-                <!--                    android:layout_width="wrap_content"-->
-                <!--                    android:layout_weight="1"-->
-                <!--                    android:text="绘制" />-->
             </TableRow>
 
             <TableRow
@@ -253,13 +269,13 @@
                     android:id="@+id/btn_show_ch1"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="解析滤波前数据" />
+                    android:text="解析\n滤波前" />
 
                 <Button
                     android:id="@+id/btn_show_ch2"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="解析滤波后数据" />
+                    android:text="解析\n滤波后" />
 
             </TableRow>
 
@@ -272,13 +288,19 @@
                     android:id="@+id/btn_clear_ch1"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="清除滤波前数据" />
+                    android:text="清除滤波前" />
 
                 <Button
                     android:id="@+id/btn_clear_ch2"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="清除滤波后数据" />
+                    android:text="清除滤波后" />
+
+                <Button
+                    android:id="@+id/btn_clear_buffer"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="清除缓冲区" />
 
             </TableRow>
 
@@ -295,85 +317,34 @@
 
             </TableRow>
 
-            <TableRow
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:textSize="10sp"
-                    android:text="当前缓冲区大小:" />
-
-                <EditText
-                    android:id="@+id/edit_buffer"
-                    android:layout_width="0dp"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="0.5"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:text="Byte" />
-
-                <Button
-                    android:id="@+id/btn_confirm"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:text="修改" />
-
-            </TableRow>
             <!--            <TableRow-->
             <!--                android:layout_width="wrap_content"-->
             <!--                android:layout_weight="1"-->
             <!--                android:gravity="center_vertical">-->
 
-            <!--                <TextView-->
-            <!--                    android:layout_weight="1"-->
-            <!--                    android:text="输出波形"-->
-            <!--                    android:textSi ze="10sp" />-->
-
-            <!--                <Button-->
-            <!--                    android:id="@+id/btn_out_sin_wave"-->
-            <!--                    android:layout_width="wrap_content"-->
-            <!--                    android:layout_weight="1"-->
-            <!--                    android:text="正弦波" />-->
-
-            <!--                <Button-->
-            <!--                    android:id="@+id/btn_out_rect_wave"-->
-            <!--                    android:layout_width="wrap_content"-->
-            <!--                    android:layout_weight="1"-->
-            <!--                    android:text="方波" />-->
-            <!--            </TableRow>-->
-
-            <!--            <TableRow-->
-            <!--                android:layout_width="wrap_content"-->
-            <!--                android:layout_weight="1"-->
-            <!--                android:gravity="center_vertical">-->
-
-            <!--                <TextView-->
-            <!--                    android:layout_gravity="left|center_vertical"-->
-            <!--                    android:layout_weight="1"-->
-            <!--                    android:text="输出频率"-->
-            <!--                    android:textSize="10sp" />-->
+            <!--&lt;!&ndash;                <TextView&ndash;&gt;-->
+            <!--&lt;!&ndash;                    android:layout_width="0dp"&ndash;&gt;-->
+            <!--&lt;!&ndash;                    android:layout_weight="1"&ndash;&gt;-->
+            <!--&lt;!&ndash;                    android:textSize="10sp"&ndash;&gt;-->
+            <!--&lt;!&ndash;                    android:text="当前缓冲区大小:" />&ndash;&gt;-->
 
             <!--                <EditText-->
-            <!--                    android:id="@+id/edittext_out_wave_freq"-->
-            <!--                    android:layout_weight="1"-->
-            <!--                    android:background="@android:drawable/editbox_dropdown_light_frame"-->
-            <!--                    android:hint="10"-->
-            <!--                    android:inputType="number"-->
-            <!--                    android:paddingLeft="5dp"-->
-            <!--                    android:textSize="10sp" />-->
+            <!--                    android:id="@+id/edit_buffer"-->
+            <!--                    android:layout_width="0dp"-->
+            <!--                    android:layout_weight="1" />-->
 
             <!--                <TextView-->
-            <!--                    android:layout_gravity="left|center_vertical"-->
+            <!--                    android:layout_width="0dp"-->
+            <!--                    android:layout_weight="0.5"-->
+            <!--                    android:textSize="12sp"-->
+            <!--                    android:textStyle="bold"-->
+            <!--                    android:text="Byte" />-->
+
+            <!--                <Button-->
+            <!--                    android:id="@+id/btn_confirm"-->
+            <!--                    android:layout_width="0dp"-->
             <!--                    android:layout_weight="1"-->
-            <!--                    android:paddingLeft="5dp"-->
-            <!--                    android:text="Hz (10Hz-25KHz)"-->
-            <!--                    android:textSize="10sp" />-->
+            <!--                    android:text="修改" />-->
 
             <!--            </TableRow>-->
         </TableLayout>

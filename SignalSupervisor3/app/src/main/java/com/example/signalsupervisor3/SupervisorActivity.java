@@ -40,16 +40,10 @@ public class SupervisorActivity extends AppCompatActivity {
     private BluetoothDevice mBluetoothDevice;
     private ConnectedThread mConnectedThread;
     private AcceptThread mAcceptThread;
-    private String[] mCh1FreqStream;
-    private String[] mCh2FreqStream;
-    private String[] mCh1VMaxStream;
-    private String[] mCh2VMaxStream;
     private Handler mHandler;
     private byte[] mBuffer;
     private int mBufferPtr;
-    private float[] freq;
-    private float[] magnitude;
-    private boolean isRunning = false;
+    private final StringBuilder mStringBuffer = new StringBuilder(GlobalData.BUFFER_SIZE);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,14 +63,14 @@ public class SupervisorActivity extends AppCompatActivity {
         Button btnClearBuffer = findViewById(R.id.btn_clear_buffer);
         Button btnClearCh1 = findViewById(R.id.btn_clear_ch1);
         Button btnClearCh2 = findViewById(R.id.btn_clear_ch2);
-        Button btnConfirm = findViewById(R.id.btn_confirm);
-        EditText editBuffer = findViewById(R.id.edit_buffer);
-        editBuffer.setText(String.valueOf(BUFFER_SIZE));
+        Button btnStopTrans = findViewById(R.id.btn_stop_trans);
         btnBeginTrans.setOnClickListener(new BeginTransListener());
+        btnStopTrans.setOnClickListener(new StopTransListener());
         btnShowCh1.setOnClickListener(new ShowCH1Listener());
         btnShowCh2.setOnClickListener(new ShowCH2Listener());
         btnDraw.setOnClickListener(new DrawListener());
         btnClearBuffer.setOnClickListener(new ClearBufferListener());
+
         btnClearCh1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,16 +95,6 @@ public class SupervisorActivity extends AppCompatActivity {
                 showToast(SupervisorActivity.this, "已清除");
             }
         });
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String text = editBuffer.getText().toString();
-                BUFFER_SIZE = Integer.parseInt(text);
-                editBuffer.setText(String.valueOf(BUFFER_SIZE));
-                mBuffer = new byte[BUFFER_SIZE];
-                showToast(SupervisorActivity.this, "缓冲区大小已修改为: " + BUFFER_SIZE + "Byte");
-            }
-        });
     }
 
     private class ClearBufferListener implements View.OnClickListener {
@@ -119,6 +103,7 @@ public class SupervisorActivity extends AppCompatActivity {
             Arrays.fill(mBuffer, (byte) 0);
             mBufferPtr = 0;
             TextView textHasTrans = findViewById(R.id.text_has_trans);
+            mStringBuffer.setLength(0);
             textHasTrans.setText("0");
             showToast(SupervisorActivity.this, "缓冲区已清空");
         }
@@ -131,29 +116,47 @@ public class SupervisorActivity extends AppCompatActivity {
         }
     }
 
+    private class StopTransListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            mConnectedThread.setStopped(true);
+            showToast(SupervisorActivity.this, "已暂停");
+        }
+    }
+
     private class ShowCH1Listener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
             // 防止数据过少
-            if (mBufferPtr < BUFFER_SIZE / 2) {
-                showToast(SupervisorActivity.this, "缓冲区数据量过少");
-            } else {
-                String[][] streams = phraseTwoStreamFromBuffer();
-                mCh1FreqStream = streams[0];
-                mCh1VMaxStream = streams[1];
-                GlobalData.sCh1FreqArray = sstream2floats(mCh1FreqStream);
-                GlobalData.sCh1VMaxArray = sstream2floats(mCh1VMaxStream);
+
+            String[][] streams = phraseTwoStreamFromBuffer(mStringBuffer.toString());
+            if (streams != null) {
+                String[] ch1FreqStream = streams[0];
+                String[] ch1VMaxStream = streams[1];
+                GlobalData.sCh1FreqArray = sstream2floats(ch1FreqStream);
+                GlobalData.sCh1VMaxArray = sstream2floats(ch1VMaxStream);
                 TextView textCH1VMax = findViewById(R.id.text_CH1_VMax);
                 TextView textCH1Freq = findViewById(R.id.text_CH1_Freq);
-                textCH1VMax.setText((String.valueOf(GlobalData.sCh1VMaxArray[GlobalData.sCh1VMaxArray.length - 1])));
-                textCH1Freq.setText((String.valueOf(GlobalData.sCh1FreqArray[GlobalData.sCh1FreqArray.length - 1])));
-                // 设置滤波前的幅值稳定后的定值
-                int temLen = GlobalData.sCh1VMaxArray.length;
-                GlobalData.sVMaxCh1 = GlobalData.sCh1VMaxArray[temLen - 1];
+                // 求出平均值
+                float avgCH1VMax = 0, avgCH1Freq = 0;
+                for (int i = 0; i < GlobalData.sCh1VMaxArray.length; i++) {
+                    avgCH1VMax += GlobalData.sCh1VMaxArray[i];
+                }
+                avgCH1VMax /= GlobalData.sCh1VMaxArray.length;
+                for (int i = 0; i < GlobalData.sCh1FreqArray.length; i++) {
+                    avgCH1Freq += GlobalData.sCh1FreqArray[i];
+                }
+                avgCH1Freq /= GlobalData.sCh1FreqArray.length;
+                textCH1VMax.setText((String.format("%.3f", avgCH1VMax)));
+                textCH1Freq.setText((String.format("%.1f", avgCH1Freq)));
+
+                GlobalData.sVMaxCh1 = avgCH1VMax;
                 mConnectedThread.setStopped(true);
-                isRunning = false;
                 showToast(SupervisorActivity.this, "解析成功");
+            } else {
+                showToast(SupervisorActivity.this, "当前缓冲区为空,请传输数据后解析");
             }
+
         }
     }
 
@@ -161,22 +164,33 @@ public class SupervisorActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             // 防止数据过少
-            if (mBufferPtr < GlobalData.PARAM_MAX_SIZE * 12) {
-                showToast(SupervisorActivity.this, "缓冲区数据量过少");
-            } else {
-                String[][] streams = phraseTwoStreamFromBuffer();
-                mCh2FreqStream = streams[0];
-                mCh2VMaxStream = streams[1];
-                GlobalData.sCh2FreqArray = sstream2floats(mCh2FreqStream);
-                GlobalData.sCh2VMaxArray = sstream2floats(mCh2VMaxStream);
+
+            String[][] streams = phraseTwoStreamFromBuffer(mStringBuffer.toString());
+            if (streams != null) {
+                String[] ch2FreqStream = streams[0];
+                String[] ch2VMaxStream = streams[1];
+                GlobalData.sCh2FreqArray = sstream2floats(ch2FreqStream);
+                GlobalData.sCh2VMaxArray = sstream2floats(ch2VMaxStream);
                 TextView textCH2VMax = findViewById(R.id.text_CH2_VMax);
                 TextView textCH2Freq = findViewById(R.id.text_CH2_Freq);
-                textCH2VMax.setText(String.valueOf(GlobalData.sCh2VMaxArray[GlobalData.sCh2VMaxArray.length - 1]));
-                textCH2Freq.setText(String.valueOf(GlobalData.sCh2FreqArray[GlobalData.sCh2FreqArray.length - 1]));
+                // 求出平均值
+                float avgCH2VMax = 0, avgCH2Freq = 0;
+                for (int i = 0; i < GlobalData.sCh2VMaxArray.length; i++) {
+                    avgCH2VMax += GlobalData.sCh2VMaxArray[i];
+                }
+                avgCH2VMax /= GlobalData.sCh2VMaxArray.length;
+                for (int i = 0; i < GlobalData.sCh2FreqArray.length; i++) {
+                    avgCH2Freq += GlobalData.sCh2FreqArray[i];
+                }
+                avgCH2Freq /= GlobalData.sCh2FreqArray.length;
+                textCH2VMax.setText((String.format("%.3f", avgCH2VMax)));
+                textCH2Freq.setText((String.format("%.1f", avgCH2Freq)));
                 mConnectedThread.setStopped(true);
-                isRunning = false;
                 showToast(SupervisorActivity.this, "解析成功");
+            } else {
+                showToast(SupervisorActivity.this, "当前缓冲区为空,请传输数据后解析");
             }
+
         }
     }
 
@@ -208,37 +222,39 @@ public class SupervisorActivity extends AppCompatActivity {
     }
 
     @SuppressLint("LongLogTag")
-    private String[][] phraseTwoStreamFromBuffer() {
-        String bufferStr = new String(mBuffer);
-        String[] split = bufferStr.split(GlobalData.SPLIT_REGEX);
-        String[] stream1 = new String[split.length / 2];
-        String[] stream2 = new String[split.length / 2];
-        int i = 0, p1 = 0, p2 = 0;
-        //找到第一个有效的频率
-        while (!split[i].matches(GlobalData.FREQ_REGEX)) i++;
-        for (int j = i; j < split.length - 1; ) {
-            // 参数1 偶 频率
-            if (((j - i) & 0b1) == 0) {
-                if (split[j].matches(GlobalData.FREQ_REGEX))
-                    stream1[p1++] = split[j++];
-                else {
-                    j += 2;
-                }
-            } else {
-                if (split[j].matches(GlobalData.VOL_REGEX))
-                    stream2[p2++] = split[j++];
-                else {
-                    p1--;
-                    j++;
+    private String[][] phraseTwoStreamFromBuffer(String bufferStr) {
+        if (bufferStr.length() > 0) {
+            String[] split = bufferStr.split(GlobalData.SPLIT_REGEX);
+            String[] stream1 = new String[split.length / 2];
+            String[] stream2 = new String[split.length / 2];
+            int i = 0, p1 = 0, p2 = 0;
+            //找到第一个有效的频率
+            while (!split[i].matches(GlobalData.FREQ_REGEX)) i++;
+            for (int j = i; j < split.length - 1; ) {
+                // 参数1 偶 频率
+                if (((j - i) & 0b1) == 0) {
+                    if (split[j].matches(GlobalData.FREQ_REGEX))
+                        stream1[p1++] = split[j++];
+                    else {
+                        j += 2;
+                    }
+                } else {
+                    if (split[j].matches(GlobalData.VOL_REGEX))
+                        stream2[p2++] = split[j++];
+                    else {
+                        p1--;
+                        j++;
+                    }
                 }
             }
-        }
-        Log.i("phraseTwoStreamFromBuffer" + ": buffer", bufferStr);
-        Log.i("phraseTwoStreamFromBuffer" + ": 频率", Arrays.toString(stream1));
-        Log.i("phraseTwoStreamFromBuffer" + "stream1 len", String.valueOf(stream1.length));
-        Log.i("phraseTwoStreamFromBuffer" + ": 幅值", Arrays.toString(stream2));
-        Log.i("phraseTwoStreamFromBuffer" + "stream2 len", String.valueOf(stream2.length));
-        return new String[][]{stream1, stream2};
+            Log.i("phraseTwoStreamFromBuffer" + ": buffer", bufferStr);
+            Log.i("phraseTwoStreamFromBuffer" + ": 频率", Arrays.toString(stream1));
+            Log.i("phraseTwoStreamFromBuffer" + "stream1 len", String.valueOf(stream1.length));
+            Log.i("phraseTwoStreamFromBuffer" + ": 幅值", Arrays.toString(stream2));
+            Log.i("phraseTwoStreamFromBuffer" + "stream2 len", String.valueOf(stream2.length));
+            return new String[][]{stream1, stream2};
+        } else
+            return null;
     }
 
     private void beginTransfer() {
@@ -250,21 +266,17 @@ public class SupervisorActivity extends AppCompatActivity {
                 mBluetoothSocket = mConnectThread.getSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
                 mConnectedThread.start();
-                isRunning = true;
                 showToast(this, "开始接收");
             } else if (type == Constant.SERVER_TYPE) {
                 mAcceptThread = GlobalData.getAcceptThread();
                 mBluetoothSocket = mAcceptThread.getBluetoothSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
                 mConnectedThread.start();
-                isRunning = true;
                 showToast(this, "开始接收");
             } else {
                 Log.e(TAG, "连接未成功");
             }
         } else {
-            // 跳过当前输入流缓冲区，实现实时传输
-            mConnectedThread.skipInputBuffer();
             mConnectedThread.resumeThread();
             showToast(this, "继续传输");
         }
@@ -290,21 +302,11 @@ public class SupervisorActivity extends AppCompatActivity {
                     // showToast(SupervisorActivity.this, "data:" + message.obj);
                     // 这里一次传过来的不一定是一个完整的参数,也不能保证只有一个参数
                     TextView textHasTrans = findViewById(R.id.text_has_trans);
-                    for (byte aByte : (byte[]) message.obj) {
-                        // 将获取到的数据流全部放入mBuffer里,超过BUFFER_SIZE时断开线程
-                        if (mBufferPtr == BUFFER_SIZE) {
-                            mConnectedThread.setStopped(true);
-                            isRunning = false;
-                            showToast(SupervisorActivity.this, "缓冲区已满,传输停止,请解析后清空");
-                            textHasTrans.setText(String.valueOf(BUFFER_SIZE));
-                            return;
-                        }
-                        mBuffer[mBufferPtr++] = aByte;
-                    }
-                    textHasTrans.setText(String.valueOf(mBufferPtr));
-                    Log.i(TAG, "data:" + new String((byte[]) message.obj));
-//                    Log.i(TAG, "data:" + Arrays.toString(String.valueOf(message.obj).getBytes(StandardCharsets.US_ASCII)));
-                    Log.i(TAG, "pos: " + mBufferPtr);
+                    mStringBuffer.append((char) ((byte) message.obj));
+                    int len = mStringBuffer.toString().length();
+                    textHasTrans.setText(String.valueOf(len));
+                    Log.i(TAG, "len: " + String.valueOf(len));
+
                     break;
                 case Constant.MSG_ERROR:
                     showToast(SupervisorActivity.this, "连接断开");
