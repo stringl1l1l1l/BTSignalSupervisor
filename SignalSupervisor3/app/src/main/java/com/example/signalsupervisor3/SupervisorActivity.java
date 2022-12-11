@@ -37,13 +37,10 @@ public class SupervisorActivity extends AppCompatActivity {
     private static int BUFFER_SIZE = GlobalData.BUFFER_SIZE;
     private ConnectThread mConnectThread;
     private BluetoothSocket mBluetoothSocket;
-    private BluetoothDevice mBluetoothDevice;
     private ConnectedThread mConnectedThread;
     private AcceptThread mAcceptThread;
     private Handler mHandler;
-    private byte[] mBuffer;
-    private int mBufferPtr;
-    private final StringBuilder mStringBuffer = new StringBuilder(GlobalData.BUFFER_SIZE);
+    private final StringBuffer mStringBuffer = new StringBuffer(GlobalData.BUFFER_SIZE);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +48,6 @@ public class SupervisorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_supervisor);
         // 初始化
         BluetoothController.stopDiscovery();
-        mBuffer = new byte[BUFFER_SIZE];
-        Arrays.fill(mBuffer, (byte) 32);
-        mBufferPtr = 0;
         mHandler = new SupervisorHandler();
         // 获取控件
         Button btnBeginTrans = findViewById(R.id.btn_begin_trans);
@@ -70,7 +64,6 @@ public class SupervisorActivity extends AppCompatActivity {
         btnShowCh2.setOnClickListener(new ShowCH2Listener());
         btnDraw.setOnClickListener(new DrawListener());
         btnClearBuffer.setOnClickListener(new ClearBufferListener());
-
         btnClearCh1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -100,8 +93,6 @@ public class SupervisorActivity extends AppCompatActivity {
     private class ClearBufferListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            Arrays.fill(mBuffer, (byte) 0);
-            mBufferPtr = 0;
             TextView textHasTrans = findViewById(R.id.text_has_trans);
             mStringBuffer.setLength(0);
             textHasTrans.setText("0");
@@ -151,7 +142,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 textCH1Freq.setText((String.format("%.1f", avgCH1Freq)));
 
                 GlobalData.sVMaxCh1 = avgCH1VMax;
-                mConnectedThread.setStopped(true);
+                // mConnectedThread.setStopped(true);
                 showToast(SupervisorActivity.this, "解析成功");
             } else {
                 showToast(SupervisorActivity.this, "当前缓冲区为空,请传输数据后解析");
@@ -185,7 +176,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 avgCH2Freq /= GlobalData.sCh2FreqArray.length;
                 textCH2VMax.setText((String.format("%.3f", avgCH2VMax)));
                 textCH2Freq.setText((String.format("%.1f", avgCH2Freq)));
-                mConnectedThread.setStopped(true);
+                // mConnectedThread.setStopped(true);
                 showToast(SupervisorActivity.this, "解析成功");
             } else {
                 showToast(SupervisorActivity.this, "当前缓冲区为空,请传输数据后解析");
@@ -205,21 +196,21 @@ public class SupervisorActivity extends AppCompatActivity {
         return res;
     }
 
-    private String phraseOneParamFromBuffer() {
-        String bufferStr = new String(mBuffer);
-        String[] split = bufferStr.split(GlobalData.SPLIT_REGEX);
-        String res = "";
-        for (String s : split) {
-            if (s.matches(GlobalData.VOL_REGEX)) {
-                res = s;
-                break;
-            }
-            Log.d(TAG + ": DrawVppListener", s);
-            Log.d(TAG + ": DrawVppListener", Arrays.toString(s.getBytes(StandardCharsets.US_ASCII)));
-        }
-        Log.d(TAG + " DrawVppListener length", String.valueOf(split.length));
-        return res;
-    }
+//    private String phraseOneParamFromBuffer() {
+//        String bufferStr = new String(mBuffer);
+//        String[] split = bufferStr.split(GlobalData.SPLIT_REGEX);
+//        String res = "";
+//        for (String s : split) {
+//            if (s.matches(GlobalData.VOL_REGEX)) {
+//                res = s;
+//                break;
+//            }
+//            Log.d(TAG + ": DrawVppListener", s);
+//            Log.d(TAG + ": DrawVppListener", Arrays.toString(s.getBytes(StandardCharsets.US_ASCII)));
+//        }
+//        Log.d(TAG + " DrawVppListener length", String.valueOf(split.length));
+//        return res;
+//    }
 
     @SuppressLint("LongLogTag")
     private String[][] phraseTwoStreamFromBuffer(String bufferStr) {
@@ -265,13 +256,17 @@ public class SupervisorActivity extends AppCompatActivity {
                 mConnectThread = GlobalData.getConnectThread();
                 mBluetoothSocket = mConnectThread.getSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
-                mConnectedThread.start();
+                //mConnectedThread.start();
+                GlobalData.sConnectedThreadExec.execute(mConnectedThread);
+                GlobalData.setConnectedThread(mConnectedThread);
                 showToast(this, "开始接收");
             } else if (type == Constant.SERVER_TYPE) {
                 mAcceptThread = GlobalData.getAcceptThread();
                 mBluetoothSocket = mAcceptThread.getBluetoothSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
-                mConnectedThread.start();
+                //mConnectedThread.start();
+                GlobalData.sConnectedThreadExec.execute(mConnectedThread);
+                GlobalData.setConnectedThread(mConnectedThread);
                 showToast(this, "开始接收");
             } else {
                 Log.e(TAG, "连接未成功");
@@ -306,7 +301,11 @@ public class SupervisorActivity extends AppCompatActivity {
                     int len = mStringBuffer.toString().length();
                     textHasTrans.setText(String.valueOf(len));
                     Log.i(TAG, "len: " + String.valueOf(len));
-
+                    // 缓冲区数据过多，自动清除
+                    if (len >= GlobalData.BUFFER_SIZE) {
+                        mStringBuffer.setLength(0);
+                        showToast(SupervisorActivity.this, "缓冲区已清空");
+                    }
                     break;
                 case Constant.MSG_ERROR:
                     showToast(SupervisorActivity.this, "连接断开");

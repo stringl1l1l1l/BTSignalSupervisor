@@ -56,7 +56,8 @@ public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDevice
                 BluetoothDevice device = mDeviceList.get(pos);
                 // 开始连接
                 ConnectThread connectThread = new ConnectThread(device, mHandler);
-                connectThread.start();
+                //connectThread.start();
+                GlobalData.sConnectThreadExec.execute(connectThread);
                 showToast(mContext, "正在连接……");
                 mConnectingThread = new Thread(new Runnable() {
                     @Override

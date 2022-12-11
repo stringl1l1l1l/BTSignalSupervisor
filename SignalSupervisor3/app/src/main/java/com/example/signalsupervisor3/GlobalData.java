@@ -9,6 +9,7 @@ import android.os.Handler;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.example.signalsupervisor3.bluetooth.connect.AcceptThread;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectThread;
+import com.example.signalsupervisor3.bluetooth.connect.ConnectedThread;
 import com.example.signalsupervisor3.bluetooth.connect.Constant;
 
 import java.util.concurrent.Executor;
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
 public class GlobalData extends Application {
     public static int CONNECT_TIME_MS = 6000;
     public static int TEMP_BUFFER_SIZE = 256;
-    public static int BUFFER_SIZE = TEMP_BUFFER_SIZE * 20;
+    public static int BUFFER_SIZE = 12000;
     public static String FREQ_REGEX = "[0-9]{1,4}.[0-9]";
     public static String VOL_REGEX = "[0-3].[0-9]{3}";
     public static String SPLIT_REGEX = " +";
@@ -29,6 +30,16 @@ public class GlobalData extends Application {
     public static float[] sCh1VMaxArray;
     public static float[] sCh2VMaxArray;
     private static AcceptThread sAcceptThread;
+
+    public static ConnectedThread getConnectedThread() {
+        return sConnectedThread;
+    }
+
+    public static void setConnectedThread(ConnectedThread connectedThread) {
+        sConnectedThread = connectedThread;
+    }
+
+    private static ConnectedThread sConnectedThread;
     private static BluetoothServerSocket sBluetoothServerSocket;
     private static BluetoothDevice sBluetoothDevice;
     private static ConnectThread sConnectThread;

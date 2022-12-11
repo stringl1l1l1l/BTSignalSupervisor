@@ -113,7 +113,8 @@ public class BluetoothFragment extends Fragment {
         BluetoothController.startDiscovery();
         //监听客户端连接
         AcceptThread acceptThread = new AcceptThread(BluetoothController.getBluetoothAdapter(), mHandler);
-        acceptThread.start();
+        // acceptThread.start();
+        GlobalData.sAcceptedThreadExec.execute(acceptThread);
     }
 
     @Override
@@ -150,10 +151,20 @@ public class BluetoothFragment extends Fragment {
                     BluetoothController.startDiscovery();
                     Log.i(TAG, "点击查找设备");
                 } else if (id == R.id.cancel_allThread) {
-                    //mDeviceList = mBluetoothController.getBondedDeviceList();
-                    if (GlobalData.getConnectThread() != null)
+                    int flag = 0;
+                    if (GlobalData.getConnectThread() != null) {
                         GlobalData.getConnectThread().cancel();
-                    else
+                        flag = 1;
+                    }
+                    if (GlobalData.getConnectedThread() != null) {
+                        GlobalData.getConnectedThread().cancel();
+                        flag = 1;
+                    }
+                    if (GlobalData.getAcceptThread() != null) {
+                        GlobalData.getAcceptThread().cancel();
+                        flag = 1;
+                    }
+                    if (flag == 0)
                         showToast(mContext, "没有可用的连接");
                 }
                 return true;

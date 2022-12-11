@@ -148,11 +148,23 @@ public class PairedFragment extends Fragment {
                     BluetoothController.startDiscovery();
                     Log.i(TAG, "点击查找设备");
                 } else if (id == R.id.cancel_allThread) {
-                    //mDeviceList = mBluetoothController.getBondedDeviceList();
-                    if (GlobalData.getConnectThread() != null)
+                    int flag = 0;
+                    if (GlobalData.getConnectThread() != null) {
                         GlobalData.getConnectThread().cancel();
-                    else
+                        flag = 1;
+                    }
+                    if (GlobalData.getConnectedThread() != null) {
+                        GlobalData.getConnectedThread().cancel();
+                        flag = 1;
+                    }
+                    if (GlobalData.getAcceptThread() != null) {
+                        GlobalData.getAcceptThread().cancel();
+                        flag = 1;
+                    }
+                    if (flag == 0)
                         showToast(mContext, "没有可用的连接");
+                    else
+                        showToast(mContext, "已断开");
                 }
                 return true;
             }
@@ -161,7 +173,7 @@ public class PairedFragment extends Fragment {
             menu.getItem(i).setOnMenuItemClickListener(listener);
         super.onCreateOptionsMenu(menu, inflater);
     }
-    
+
     private class BluetoothReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
