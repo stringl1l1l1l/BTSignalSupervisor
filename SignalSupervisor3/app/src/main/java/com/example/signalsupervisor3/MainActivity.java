@@ -1,6 +1,7 @@
 package com.example.signalsupervisor3;
 
 import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,8 @@ import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -27,19 +30,23 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
             int permissionCheck = 0;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                permissionCheck = this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION");
-                permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION");
+                // 有一个权限没有，permission就-1
+                permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+                permissionCheck += this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+                permissionCheck += this.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT);
+                permissionCheck += this.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN);
                 if (permissionCheck != 0) {
                     this.requestPermissions(new String[]{
                             Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.BLUETOOTH_CONNECT,
+                            Manifest.permission.BLUETOOTH_SCAN
                     }, 1001); //any number
                 } else {
                     Log.d(TAG,
                             "checkBTPermissions: No need to check permissions. SDK version < LOLLIPOP.");
                 }
             }
-
         }
         Log.d(TAG, "checkBTPermission: Finish");
     }
