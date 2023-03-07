@@ -1,4 +1,4 @@
-package com.example.signalsupervisor3;
+package com.example.signalsupervisor3.ui.activities;
 
 import static com.example.signalsupervisor3.utils.AppUtils.showToast;
 
@@ -7,29 +7,32 @@ import static java.lang.Float.parseFloat;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.Editable;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.signalsupervisor3.GlobalData;
+import com.example.signalsupervisor3.R;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.example.signalsupervisor3.bluetooth.connect.AcceptThread;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectThread;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectedThread;
 import com.example.signalsupervisor3.bluetooth.connect.Constant;
+import com.example.signalsupervisor3.ui.home.BluetoothFragment;
 import com.example.signalsupervisor3.ui.views.CanvasView;
 import com.example.signalsupervisor3.utils.AppUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class SupervisorActivity extends AppCompatActivity {
@@ -49,6 +52,22 @@ public class SupervisorActivity extends AppCompatActivity {
         // 初始化
         BluetoothController.stopDiscovery();
         mHandler = new SupervisorHandler();
+        IntentFilter filter = new IntentFilter();
+        //连接失败
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+
+        //注册广播接收器
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                    showToast(SupervisorActivity.this, "连接断开");
+                    Log.i(TAG, "连接断开");
+                    finish();
+                }
+            }
+        }, filter);
         // 获取控件
         Button btnBeginTrans = findViewById(R.id.btn_begin_trans);
         Button btnShowCh1 = findViewById(R.id.btn_show_ch1);
@@ -221,7 +240,7 @@ public class SupervisorActivity extends AppCompatActivity {
             int i = 0, p1 = 0, p2 = 0;
             //找到第一个有效的频率
             while (!split[i].matches(GlobalData.FREQ_REGEX)) i++;
-            for (int j = i; j < split.length - 1; ) {
+            for (int j = i; j < split.length; ) {
                 // 参数1 偶 频率
                 if (((j - i) & 0b1) == 0) {
                     if (split[j].matches(GlobalData.FREQ_REGEX))
@@ -239,6 +258,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 }
             }
             Log.i("phraseTwoStreamFromBuffer" + ": buffer", bufferStr);
+            Log.i("phraseTwoStreamFromBuffer" + ": split", Arrays.toString(split));
             Log.i("phraseTwoStreamFromBuffer" + ": 频率", Arrays.toString(stream1));
             Log.i("phraseTwoStreamFromBuffer" + "stream1 len", String.valueOf(stream1.length));
             Log.i("phraseTwoStreamFromBuffer" + ": 幅值", Arrays.toString(stream2));
@@ -246,6 +266,19 @@ public class SupervisorActivity extends AppCompatActivity {
             return new String[][]{stream1, stream2};
         } else
             return null;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (GlobalData.getConnectThread() != null) {
+            GlobalData.getConnectThread().cancel();
+            GlobalData.setConnectThread(null);
+        }
+        if (mConnectedThread != null)
+            mConnectedThread.cancel();
+        if (GlobalData.getAcceptThread() != null)
+            GlobalData.getAcceptThread().cancel();
+        finish();
     }
 
     private void beginTransfer() {
@@ -260,7 +293,8 @@ public class SupervisorActivity extends AppCompatActivity {
                 GlobalData.sConnectedThreadExec.execute(mConnectedThread);
                 GlobalData.setConnectedThread(mConnectedThread);
                 showToast(this, "开始接收");
-            } else if (type == Constant.SERVER_TYPE) {
+            }// 若本机作为服务端
+            else if (type == Constant.SERVER_TYPE) {
                 mAcceptThread = GlobalData.getAcceptThread();
                 mBluetoothSocket = mAcceptThread.getBluetoothSocket();
                 mConnectedThread = new ConnectedThread(mBluetoothSocket, mHandler);
@@ -280,13 +314,15 @@ public class SupervisorActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (GlobalData.getConnectThread() != null)
+        if (GlobalData.getConnectThread() != null) {
             GlobalData.getConnectThread().cancel();
+            GlobalData.setConnectThread(null);
+        }
         if (mConnectedThread != null)
             mConnectedThread.cancel();
-        if (GlobalData.getAcceptThread() != null)
+        if (GlobalData.getAcceptThread() != null) {
             GlobalData.getAcceptThread().cancel();
-        GlobalData.clear();
+        }
     }
 
     private class SupervisorHandler extends Handler {
@@ -309,11 +345,11 @@ public class SupervisorActivity extends AppCompatActivity {
                     break;
                 case Constant.MSG_ERROR:
                     showToast(SupervisorActivity.this, "连接断开");
+                    finish(); // 关闭当前Activity
                     Log.e(TAG, "error:" + message.obj);
                     break;
             }
         }
-
     }
 
     private class DrawListener implements View.OnClickListener {
@@ -327,7 +363,5 @@ public class SupervisorActivity extends AppCompatActivity {
             showToast(SupervisorActivity.this, "绘制成功");
         }
     }
-
-
 }
 

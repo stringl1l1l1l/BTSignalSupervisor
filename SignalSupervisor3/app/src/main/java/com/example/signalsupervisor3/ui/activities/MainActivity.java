@@ -1,18 +1,15 @@
-package com.example.signalsupervisor3;
+package com.example.signalsupervisor3.ui.activities;
 
 import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Window;
 
+import com.example.signalsupervisor3.R;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -43,8 +40,7 @@ public class MainActivity extends AppCompatActivity {
                             Manifest.permission.BLUETOOTH_SCAN
                     }, 1001); //any number
                 } else {
-                    Log.d(TAG,
-                            "checkBTPermissions: No need to check permissions. SDK version < LOLLIPOP.");
+                    Log.d(TAG, "checkBTPermissions: No need to check permissions. SDK version < LOLLIPOP.");
                 }
             }
         }

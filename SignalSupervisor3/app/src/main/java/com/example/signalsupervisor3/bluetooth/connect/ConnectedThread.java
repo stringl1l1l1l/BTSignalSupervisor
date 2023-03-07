@@ -64,9 +64,27 @@ public class ConnectedThread extends Thread {
                 Message message = mHandler.obtainMessage(Constant.MSG_GOT_DATA, oneByte);
                 mHandler.sendMessage(message);
             } catch (Exception e) {
-                Log.e(TAG, "error", e);
-                mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
-                break;
+                Log.e(TAG, "Error reading from socket", e);
+                setStopped(true);
+//                if (e.getMessage().equals("bt socket closed, read return: -1")) {
+//                    // 蓝牙已关闭，关闭连接并清理资源
+//                    try {
+//                        mmInStream.close();
+//                    } catch (IOException ex) {
+//                        Log.e(TAG, "Error closing input stream", ex);
+//                    }
+//                    try {
+//                        mmSocket.close();
+//                    } catch (IOException ex) {
+//                        Log.e(TAG, "Error closing socket", ex);
+//                    }
+//                    // 发送消息通知UI层activity蓝牙已关闭
+//                    mHandler.sendEmptyMessage(Constant.MSG_ERROR);
+//                } else {
+//                    // 其他异常，将其传递给UI层activity处理
+//                    Log.e(TAG, "Error reading from socket", e);
+//                    mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
+//                }
             }
         }
     }

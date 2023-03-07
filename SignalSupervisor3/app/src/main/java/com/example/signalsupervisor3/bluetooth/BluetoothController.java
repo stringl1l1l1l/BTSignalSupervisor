@@ -31,6 +31,7 @@ public class BluetoothController {
     public static void turnOnBlueTooth(Activity activity, int requestCode) {
         // 若蓝牙未开启
         if (!mBluetoothAdapter.isEnabled()) {
+            // 开启请求开启蓝牙的Activity
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             activity.startActivityForResult(intent, requestCode);
         }

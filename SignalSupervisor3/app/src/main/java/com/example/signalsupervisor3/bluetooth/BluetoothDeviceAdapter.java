@@ -3,32 +3,25 @@ package com.example.signalsupervisor3.bluetooth;
 import static com.example.signalsupervisor3.utils.AppUtils.showToast;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.signalsupervisor3.GlobalData;
 import com.example.signalsupervisor3.R;
-import com.example.signalsupervisor3.SupervisorActivity;
+import com.example.signalsupervisor3.ui.activities.SupervisorActivity;
 import com.example.signalsupervisor3.bluetooth.connect.ConnectThread;
-import com.example.signalsupervisor3.bluetooth.connect.ConnectedThread;
 import com.example.signalsupervisor3.bluetooth.connect.Constant;
-import com.example.signalsupervisor3.utils.AppUtils;
 
 
-import java.io.Serializable;
 import java.util.List;
 
 public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDeviceAdapter.ViewHolder> {

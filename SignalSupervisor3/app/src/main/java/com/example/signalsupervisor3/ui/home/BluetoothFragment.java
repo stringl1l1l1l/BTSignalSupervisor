@@ -2,21 +2,16 @@ package com.example.signalsupervisor3.ui.home;
 
 import static com.example.signalsupervisor3.utils.AppUtils.showToast;
 
-import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,14 +19,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -39,20 +31,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.signalsupervisor3.GlobalData;
 import com.example.signalsupervisor3.R;
-import com.example.signalsupervisor3.SupervisorActivity;
+import com.example.signalsupervisor3.ui.activities.SupervisorActivity;
 import com.example.signalsupervisor3.bluetooth.BluetoothController;
 import com.example.signalsupervisor3.bluetooth.BluetoothDeviceAdapter;
 import com.example.signalsupervisor3.bluetooth.connect.AcceptThread;
 import com.example.signalsupervisor3.bluetooth.connect.Constant;
 import com.example.signalsupervisor3.utils.AppUtils;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class BluetoothFragment extends Fragment {
     public static final int REQUEST_ENABLE_BT = 1;
@@ -113,7 +103,6 @@ public class BluetoothFragment extends Fragment {
         BluetoothController.startDiscovery();
         //监听客户端连接
         AcceptThread acceptThread = new AcceptThread(BluetoothController.getBluetoothAdapter(), mHandler);
-        // acceptThread.start();
         GlobalData.sAcceptedThreadExec.execute(acceptThread);
     }
 
@@ -229,10 +218,6 @@ public class BluetoothFragment extends Fragment {
             switch (action) {
                 case BluetoothDevice.ACTION_FOUND:
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-//                        mSearchedDevSet.add(device);
-//                        Log.i(TAG, "查找到设备: " + device.getName() + " " + device.getAddress());
-//                    }
                     mSearchedDevSet.add(device);
                     Log.i(TAG, "查找到设备: " + device.getName() + " " + device.getAddress());
                     break;
@@ -260,14 +245,9 @@ public class BluetoothFragment extends Fragment {
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
                     BluetoothDevice device2 = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     if (device2 != null) {
-//                        showToast(mContext, "正在连接" + device2.getAddress());
                         Log.i(TAG, "正在连接" + device2.getAddress());
                     } else
                         Log.e(TAG, "空对象");
-                    break;
-                case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                    showToast(mContext, "连接断开");
-                    Log.i(TAG, "连接断开");
                     break;
                 default:
                     break;

@@ -47,19 +47,11 @@ public class AcceptThread extends Thread {
                 mBluetoothSocket = mmServerSocket.accept();
             } catch (IOException e) {
                 mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
-                break;
             }
             // 如果一个连接被接受
             if (mBluetoothSocket != null) {
                 // 在单独的线程中完成管理连接的工作
                 manageConnectedSocket(mBluetoothSocket);
-                try {
-                    mmServerSocket.close();
-                    mHandler.sendEmptyMessage(Constant.MSG_FINISH_LISTENING);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                break;
             }
         }
     }
@@ -69,12 +61,8 @@ public class AcceptThread extends Thread {
 //        if (mConnectedThread != null) {
 //            mConnectedThread.cancel();
 //        }
-        mHandler.sendEmptyMessage(Constant.MSG_GOT_A_CLINET);
-        Message message =
-                mHandler.obtainMessage(Constant.MSG_GOT_A_CLINET, this);
+        Message message = mHandler.obtainMessage(Constant.MSG_GOT_A_CLINET, this);
         mHandler.sendMessage(message);
-//        mConnectedThread = new ConnectedThread(socket, mHandler);
-//        mConnectedThread.start();
     }
 
     /**
@@ -82,17 +70,13 @@ public class AcceptThread extends Thread {
      */
     public void cancel() {
         try {
-            mmServerSocket.close();
-            mHandler.sendEmptyMessage(Constant.MSG_FINISH_LISTENING);
+//            if (mmServerSocket != null)
+//                mmServerSocket.close();
+            if (mBluetoothSocket != null)
+                mBluetoothSocket.close();
         } catch (IOException e) {
         }
     }
-
-//    public void sendData(byte[] data) {
-//        if (mConnectedThread != null) {
-//            mConnectedThread.write(data);
-//        }
-//    }
 
     public BluetoothSocket getBluetoothSocket() {
         return mBluetoothSocket;
