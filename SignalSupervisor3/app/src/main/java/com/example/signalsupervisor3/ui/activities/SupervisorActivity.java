@@ -1,5 +1,7 @@
 package com.example.signalsupervisor3.ui.activities;
 
+import static com.example.signalsupervisor3.utils.AppUtils.getFPointsFromGlobal;
+import static com.example.signalsupervisor3.utils.AppUtils.getPointsFromGlobal;
 import static com.example.signalsupervisor3.utils.AppUtils.showToast;
 
 import static java.lang.Float.parseFloat;
@@ -340,7 +342,8 @@ public class SupervisorActivity extends AppCompatActivity {
                     // 缓冲区数据过多，自动清除
                     if (len >= GlobalData.BUFFER_SIZE) {
                         mStringBuffer.setLength(0);
-                        showToast(SupervisorActivity.this, "缓冲区已清空");
+                        textHasTrans.setText("0");
+                        showToast(SupervisorActivity.this, "缓冲区达上限，自动清空");
                     }
                     break;
                 case Constant.MSG_ERROR:
@@ -355,10 +358,11 @@ public class SupervisorActivity extends AppCompatActivity {
     private class DrawListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            float[] points = AppUtils.getPointsFromGlobal();
+//            float[] points = getPointsFromGlobal();
             CanvasView canvasView = findViewById(R.id.supervisor_canvas);
-            Log.i("DrawListener", Arrays.toString(points));
-            canvasView.mPoints = points;
+//            Log.i("DrawListener", Arrays.toString(points));
+//            canvasView.mPoints = points;
+            canvasView.mFPoints = getFPointsFromGlobal();
             canvasView.requestLayout();
             showToast(SupervisorActivity.this, "绘制成功");
         }

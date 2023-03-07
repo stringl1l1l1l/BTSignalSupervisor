@@ -2,6 +2,7 @@ package com.example.signalsupervisor3.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.Toast;
@@ -11,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.signalsupervisor3.GlobalData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -19,6 +22,21 @@ import java.util.concurrent.Executors;
 public class AppUtils {
     public static final Executor EXECUTOR = Executors.newCachedThreadPool();
     private static Toast mToast;
+
+    public static class FPoint {
+        public float x;
+        public float y;
+
+        public FPoint(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + x + " ," + y + ")";
+        }
+    }
 
     public static void showToast(Context context, String text) {
         if (mToast == null) {
@@ -75,11 +93,12 @@ public class AppUtils {
         return points;
     }
 
+
     @SuppressLint("LongLogTag")
     public static float[] getPointsFromGlobal() {
         float vMax1 = GlobalData.sVMaxCh1;
-        float[] logFreq = GlobalData.sCh2FreqArray;
-        float[] vMaxRatios = GlobalData.sCh2VMaxArray;
+        float[] logFreq = Arrays.copyOf(GlobalData.sCh2FreqArray, GlobalData.sCh2FreqArray.length);
+        float[] vMaxRatios = Arrays.copyOf(GlobalData.sCh2VMaxArray, GlobalData.sCh2VMaxArray.length);
         Log.i("getPointsFromGlobal vMax1", String.valueOf(vMax1));
         Log.i("getPointsFromGlobal logFreq", Arrays.toString(logFreq));
         Log.i("getPointsFromGlobal vMaxRatios", Arrays.toString(vMaxRatios));
@@ -105,6 +124,59 @@ public class AppUtils {
         Log.i("getPointsFromGlobal", Arrays.toString(res));
         return res;
     }
+
+    @SuppressLint("LongLogTag")
+    public static List<FPoint> getFPointsFromGlobal() {
+        float vMax1 = GlobalData.sVMaxCh1;
+        float[] logFreq = Arrays.copyOf(GlobalData.sCh2FreqArray, GlobalData.sCh2FreqArray.length);
+        float[] vMax2Array = Arrays.copyOf(GlobalData.sCh2VMaxArray, GlobalData.sCh2VMaxArray.length);
+        Log.i("getFPointsFromGlobal vMax1", String.valueOf(vMax1));
+        Log.i("getFPointsFromGlobal logFreq", Arrays.toString(logFreq));
+        Log.i("getFPointsFromGlobal vMax2Array", Arrays.toString(vMax2Array));
+        List<FPoint> res = new ArrayList<>();
+        if (vMax1 == 0 || logFreq == null || vMax2Array == null) {
+            res.add(new FPoint(0, 0));
+            return res;
+        }
+        int minLen = Math.min(logFreq.length, vMax2Array.length);
+        for (int i = 0; i < minLen; i++) {
+            float x = (float) Math.log10(logFreq[i]);
+            float y = 0;
+            if (vMax1 != 0) {
+                y = 20 * (float) Math.log10(vMax2Array[i] / vMax1);
+            }
+            res.add(new FPoint(x, y));
+        }
+        Log.i("getFPointsFromGlobal points", res.toString());
+        return smooth(res, 3, 0.5);
+    }
+
+    private static List<FPoint> smooth(List<FPoint> points, int windowSize, double threshold) {
+        List<FPoint> smoothedPoints = new ArrayList<>();
+
+        for (int i = 0; i < points.size(); i++) {
+            float sumX = 0;
+            float sumY = 0;
+            int count = 0;
+
+            for (int j = Math.max(0, i - windowSize); j <= Math.min(points.size() - 1, i + windowSize); j++) {
+                sumX += points.get(j).x;
+                sumY += points.get(j).y;
+                count++;
+            }
+
+            float averageX = sumX / count;
+            float averageY = sumY / count;
+
+            float distance = (float) Math.sqrt(Math.pow(points.get(i).x - averageX, 2) + Math.pow(points.get(i).y - averageY, 2));
+            if (distance <= threshold) {
+                smoothedPoints.add(new FPoint(averageX, averageY));
+            }
+        }
+        Log.i("smooth points", smoothedPoints.toString());
+        return smoothedPoints;
+    }
+
 
     public static class WrapContentLinearLayoutManager extends LinearLayoutManager {
         public WrapContentLinearLayoutManager(Context context) {

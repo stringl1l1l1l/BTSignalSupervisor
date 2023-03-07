@@ -18,14 +18,17 @@ import androidx.annotation.Nullable;
 import com.example.signalsupervisor3.GlobalData;
 import com.example.signalsupervisor3.utils.AppUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class CanvasView extends View {
     private static final String TAG = CanvasView.class.getSimpleName();
     private Paint mGridPaint;//网格画笔
     private Point mWinSize;//屏幕尺寸
     private Point mCoo;//坐标系原点
-    public float[] mPoints = new float[4];
+    public float[] mPoints;
+    public List<AppUtils.FPoint> mFPoints;
     private static final int xStep = 100;
     private static final int yStep = 100;
     private static final int X_RANGE = 4;
@@ -236,6 +239,14 @@ public class CanvasView extends View {
         canvas.drawPoints(points, mRedPaint);
     }
 
+    public void drawPoint(Canvas canvas, List<AppUtils.FPoint> points) {
+        List<AppUtils.FPoint> normalPoints = normalizeFPoints(mCoo, points);
+        mRedPaint.setStrokeWidth(8);
+        for (AppUtils.FPoint point : normalPoints) {
+            canvas.drawPoint(point.x, point.y, mRedPaint);
+        }
+    }
+
     /**
      * 绘制线
      *
@@ -254,6 +265,17 @@ public class CanvasView extends View {
         //canvas.drawLine(500, 200, 900, 400, mRedPaint);
         //绘制一组点，坐标位置由float数组指定(必须是4的倍数个)
         canvas.drawLines(points, mRedPaint);
+    }
+
+    public List<AppUtils.FPoint> normalizeFPoints(Point origin, List<AppUtils.FPoint> points) {
+        List<AppUtils.FPoint> res = new ArrayList<>();
+        for (AppUtils.FPoint point : points) {
+            float x = origin.x + point.x / X_RANGE * (mWinSize.x - origin.x);
+            float y = origin.y - point.y / Y_RANGE * origin.y;
+            res.add(new AppUtils.FPoint(x, y));
+        }
+        Log.d("normalizePoints", Arrays.toString(points.toArray()));
+        return res;
     }
 
     public void normalizePoints(Point origin, float[] points) {
@@ -292,7 +314,9 @@ public class CanvasView extends View {
         //TODO drawCoo 绘制坐标系:release：
         drawCoo(canvas, mCoo, mWinSize, mGridPaint);
         //画点
-        drawPoint(canvas, mPoints);
+//        drawPoint(canvas, mPoints);
+        if (mFPoints != null)
+            drawPoint(canvas, mFPoints);
 //        //画线
         //drawLine(canvas);
     }
