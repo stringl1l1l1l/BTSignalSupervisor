@@ -2,6 +2,7 @@ package com.example.signalsupervisor3.ui.activities;
 
 import static com.example.signalsupervisor3.utils.AppUtils.getFPointsFromGlobal;
 import static com.example.signalsupervisor3.utils.AppUtils.getPointsFromGlobal;
+import static com.example.signalsupervisor3.utils.AppUtils.interpolate;
 import static com.example.signalsupervisor3.utils.AppUtils.showToast;
 
 import static java.lang.Float.parseFloat;
@@ -34,6 +35,8 @@ import com.example.signalsupervisor3.bluetooth.connect.Constant;
 import com.example.signalsupervisor3.ui.home.BluetoothFragment;
 import com.example.signalsupervisor3.ui.views.CanvasView;
 import com.example.signalsupervisor3.utils.AppUtils;
+
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
 import java.util.Arrays;
 
@@ -74,7 +77,8 @@ public class SupervisorActivity extends AppCompatActivity {
         Button btnBeginTrans = findViewById(R.id.btn_begin_trans);
         Button btnShowCh1 = findViewById(R.id.btn_show_ch1);
         Button btnShowCh2 = findViewById(R.id.btn_show_ch2);
-        Button btnDraw = findViewById(R.id.btn_draw);
+        Button btnDrawPoints = findViewById(R.id.btn_draw_points);
+        Button btnDrawLine = findViewById(R.id.btn_draw_line);
         Button btnClearBuffer = findViewById(R.id.btn_clear_buffer);
         Button btnClearCh1 = findViewById(R.id.btn_clear_ch1);
         Button btnClearCh2 = findViewById(R.id.btn_clear_ch2);
@@ -83,7 +87,8 @@ public class SupervisorActivity extends AppCompatActivity {
         btnStopTrans.setOnClickListener(new StopTransListener());
         btnShowCh1.setOnClickListener(new ShowCH1Listener());
         btnShowCh2.setOnClickListener(new ShowCH2Listener());
-        btnDraw.setOnClickListener(new DrawListener());
+        btnDrawPoints.setOnClickListener(new DrawPointsListener());
+        btnDrawLine.setOnClickListener(new DrawLineListener());
         btnClearBuffer.setOnClickListener(new ClearBufferListener());
         btnClearCh1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -355,16 +360,26 @@ public class SupervisorActivity extends AppCompatActivity {
         }
     }
 
-    private class DrawListener implements View.OnClickListener {
+    private class DrawPointsListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-//            float[] points = getPointsFromGlobal();
             CanvasView canvasView = findViewById(R.id.supervisor_canvas);
-//            Log.i("DrawListener", Arrays.toString(points));
-//            canvasView.mPoints = points;
             canvasView.mFPoints = getFPointsFromGlobal();
             canvasView.requestLayout();
-            showToast(SupervisorActivity.this, "绘制成功");
+            showToast(SupervisorActivity.this, "描点成功");
+        }
+    }
+
+    private class DrawLineListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            CanvasView canvasView = findViewById(R.id.supervisor_canvas);
+            if (canvasView.mFPoints != null && !canvasView.mFPoints.isEmpty())
+                canvasView.mFPoints = interpolate(canvasView.mFPoints, 0.00005);
+            else
+                showToast(SupervisorActivity.this, "请先描点");
+            canvasView.requestLayout();
+            showToast(SupervisorActivity.this, "连线成功");
         }
     }
 }

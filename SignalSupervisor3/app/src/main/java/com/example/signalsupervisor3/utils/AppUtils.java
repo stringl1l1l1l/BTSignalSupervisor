@@ -7,15 +7,24 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.signalsupervisor3.GlobalData;
 
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -58,41 +67,27 @@ public class AppUtils {
         return i + 1;
     }
 
-    public static float[] makeRandomGaussianPoints(int xRange, int yRange) {
-        float mu = 3000, sigma = 2;
-        float[] points = new float[xRange * yRange * 2];
-        Random r = new Random();
-        for (int i = 0; i < xRange * yRange * 2; i++) {
-            float v = (float) (r.nextGaussian() * sigma + mu);
-            points[i] = v;
+    public static List<FPoint> interpolate(List<FPoint> points, double step) {
+        if (points.size() <= 1)
+            return points;
+        // 构造插值器
+        SplineInterpolator interpolator = new SplineInterpolator();
+        // 提取x和y坐标
+        double[] x = new double[points.size()];
+        double[] y = new double[points.size()];
+        for (int i = 0; i < points.size(); i++) {
+            x[i] = points.get(i).x;
+            y[i] = points.get(i).y;
         }
-        return points;
-    }
-
-    public static float[] makeRandomPoints(int xRange, int yRange) {
-        float[] points = new float[xRange * yRange * 2];
-
-        Random r = new Random(System.currentTimeMillis());
-        int i = 0;
-        while (i < xRange * yRange * 2) {
-            float x = (float) (r.nextDouble() * xRange);
-            float y = (float) (r.nextDouble() * yRange);
-            points[i++] = x;
-            points[i++] = y;
+        List<FPoint> res = new ArrayList<>();
+        // 进行多项式样条插值
+        PolynomialSplineFunction splineFunction = interpolator.interpolate(x, y);
+        for (double i = x[0]; i <= x[points.size() - 1]; i += step) {
+            res.add(new FPoint((float) i, (float) splineFunction.value(i)));
         }
-        return points;
+        Log.i("interpolate ", res.toString());
+        return res;
     }
-
-    public static float[] makeSinPoints(int xRange, int yRange) {
-        float[] points = new float[xRange * yRange * 2];
-        for (int i = 0; i < xRange * yRange * 2; i++) {
-            float y = (float) Math.sin(3.14 * i) * 1.0f * yRange / 2 + 1.0f * yRange / 2;
-            points[i] = i++;
-            points[i] = y;
-        }
-        return points;
-    }
-
 
     @SuppressLint("LongLogTag")
     public static float[] getPointsFromGlobal() {
@@ -128,6 +123,9 @@ public class AppUtils {
     @SuppressLint("LongLogTag")
     public static List<FPoint> getFPointsFromGlobal() {
         float vMax1 = GlobalData.sVMaxCh1;
+        if (GlobalData.sCh2FreqArray == null || GlobalData.sCh2VMaxArray == null) {
+            return new ArrayList<>();
+        }
         float[] logFreq = Arrays.copyOf(GlobalData.sCh2FreqArray, GlobalData.sCh2FreqArray.length);
         float[] vMax2Array = Arrays.copyOf(GlobalData.sCh2VMaxArray, GlobalData.sCh2VMaxArray.length);
         Log.i("getFPointsFromGlobal vMax1", String.valueOf(vMax1));
@@ -147,32 +145,63 @@ public class AppUtils {
             }
             res.add(new FPoint(x, y));
         }
-        Log.i("getFPointsFromGlobal points", res.toString());
-        return smooth(res, 3, 0.5);
+        Collections.sort(res, new Comparator<FPoint>() {
+            @Override
+            public int compare(FPoint fPoint, FPoint t1) {
+                return Float.compare(fPoint.x, t1.x);
+            }
+        });
+        res = smooth(res, 3, 0.5);
+        Log.i("getFPointsFromGlobal smoothed res", res.toString());
+        List<FPoint> newRes = new ArrayList<>();
+        for (int i = 0, j = 0; i < res.size(); ) {
+            j = i + 1;
+            FPoint head = res.get(i);
+            float averageY = head.y;
+            while (j < res.size() && res.get(j).x == res.get(i).x) {
+                averageY += res.get(j).y;
+                j++;
+            }
+            averageY /= j - i;
+            newRes.add(new FPoint(head.x, averageY));
+            i = j;
+        }
+        Log.i("getFPointsFromGlobal newRes", newRes.toString());
+        return newRes;
     }
 
+    /**
+     * 对给定的一组二维坐标点进行平滑处理。
+     *
+     * @param points     要处理的坐标点列表
+     * @param windowSize 平滑窗口大小，即每个点将使用左右各windowSize个点来计算平均值
+     * @param threshold  平滑后每个点与原始点的距离阈值，小于等于该值的点将被加入平滑后的列表
+     * @return 平滑后的坐标点列表
+     */
     private static List<FPoint> smooth(List<FPoint> points, int windowSize, double threshold) {
         List<FPoint> smoothedPoints = new ArrayList<>();
 
         for (int i = 0; i < points.size(); i++) {
+            // 初始化变量
             float sumX = 0;
             float sumY = 0;
             int count = 0;
-
+            // 计算平均值
             for (int j = Math.max(0, i - windowSize); j <= Math.min(points.size() - 1, i + windowSize); j++) {
                 sumX += points.get(j).x;
                 sumY += points.get(j).y;
                 count++;
             }
-
             float averageX = sumX / count;
             float averageY = sumY / count;
 
+            // 计算距离并添加平滑后的点到列表中
             float distance = (float) Math.sqrt(Math.pow(points.get(i).x - averageX, 2) + Math.pow(points.get(i).y - averageY, 2));
             if (distance <= threshold) {
                 smoothedPoints.add(new FPoint(averageX, averageY));
             }
         }
+        // 输出平滑后的坐标点列表
         Log.i("smooth points", smoothedPoints.toString());
         return smoothedPoints;
     }

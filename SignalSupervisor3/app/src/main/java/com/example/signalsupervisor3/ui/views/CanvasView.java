@@ -18,6 +18,8 @@ import androidx.annotation.Nullable;
 import com.example.signalsupervisor3.GlobalData;
 import com.example.signalsupervisor3.utils.AppUtils;
 
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +29,6 @@ public class CanvasView extends View {
     private Paint mGridPaint;//网格画笔
     private Point mWinSize;//屏幕尺寸
     private Point mCoo;//坐标系原点
-    public float[] mPoints;
     public List<AppUtils.FPoint> mFPoints;
     private static final int xStep = 100;
     private static final int yStep = 100;
@@ -241,7 +242,7 @@ public class CanvasView extends View {
 
     public void drawPoint(Canvas canvas, List<AppUtils.FPoint> points) {
         List<AppUtils.FPoint> normalPoints = normalizeFPoints(mCoo, points);
-        mRedPaint.setStrokeWidth(8);
+        mRedPaint.setStrokeWidth(4);
         for (AppUtils.FPoint point : normalPoints) {
             canvas.drawPoint(point.x, point.y, mRedPaint);
         }

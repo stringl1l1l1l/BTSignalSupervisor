@@ -70,8 +70,8 @@ public class AcceptThread extends Thread {
      */
     public void cancel() {
         try {
-//            if (mmServerSocket != null)
-//                mmServerSocket.close();
+            if (mmServerSocket != null)
+                mmServerSocket.close();
             if (mBluetoothSocket != null)
                 mBluetoothSocket.close();
         } catch (IOException e) {

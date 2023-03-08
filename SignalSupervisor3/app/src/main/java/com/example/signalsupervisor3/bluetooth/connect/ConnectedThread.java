@@ -22,7 +22,6 @@ public class ConnectedThread extends Thread {
     private final OutputStream mmOutStream;
     private final Handler mHandler;
     private boolean isStopped = false;
-    private byte[] mBuffer = new byte[GlobalData.TEMP_BUFFER_SIZE];  // 用于流的缓冲存储
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
         mmSocket = socket;

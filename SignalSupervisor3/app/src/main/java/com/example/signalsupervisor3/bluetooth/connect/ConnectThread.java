@@ -38,6 +38,7 @@ public class ConnectThread extends Thread {
             Log.e(TAG, "error", e);
         }
         mBluetoothSocket = tmp;
+
     }
 
     public void run() {
