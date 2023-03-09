@@ -43,7 +43,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="4"
+            android:layout_weight="5"
             android:divider="@drawable/divider_line_3dp"
             android:orientation="vertical"
             android:showDividers="middle">
@@ -51,58 +51,145 @@
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:divider="@drawable/divider_line"
                 android:showDividers="middle">
 
                 <TableRow
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
                     android:layout_weight="1"
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
+                        android:textSize="9sp"
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
                         android:text="@string/text_row1_field" />
 
-                    <TextView
-                        android:layout_weight="2"
+                    <!--                    <TextView-->
+                    <!--                        android:layout_weight="2"-->
+                    <!--                        android:id="@+id/text_CH1_VMax"-->
+                    <!--                        android:textStyle="bold"-->
+                    <!--                        android:gravity="center_horizontal"-->
+                    <!--                        android:text="0" />-->
+                    <EditText
                         android:id="@+id/text_CH1_VMax"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        android:gravity="center_horizontal"
+                        android:text="0" />
+
+                    <TextView
+                        android:layout_weight="0.5"
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:text="V" />
+
+                    <Button
+                        android:id="@+id/btn_vol1"
+                        android:layout_width="0dp"
+                        android:layout_height="45sp"
+                        android:layout_weight="1"
+                        android:textSize="10sp"
+                        android:text="确认" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_weight="1"
+                    android:layout_height="0dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:textSize="9sp"
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
+                        android:text="@string/text_row2_field" />
+
+                    <TextView
+                        android:id="@+id/text_CH1_Freq"
+                        android:layout_weight="2"
                         android:textStyle="bold"
+                        android:layout_width="0dp"
                         android:gravity="center_horizontal"
                         android:text="0" />
 
                     <TextView
                         android:layout_weight="1"
                         android:gravity="center"
+                        android:layout_width="0dp"
+                        android:text="Hz" />
+
+                    <!--                    <Button-->
+                    <!--                        android:id="@+id/btn_freq1"-->
+                    <!--                        android:layout_width="50dp"-->
+                    <!--                        android:layout_height="wrap_content"-->
+                    <!--                        android:text="确认" />-->
+                </TableRow>
+
+
+            </TableLayout>
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2"
+                android:divider="@drawable/divider_line"
+                android:orientation="vertical"
+                android:showDividers="middle">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:textSize="9sp"
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
+                        android:text="@string/text_row3_field" />
+
+                    <TextView
+                        android:layout_weight="2"
+                        android:id="@+id/text_CH2_VMax"
+                        android:textStyle="bold"
+                        android:layout_width="0dp"
+                        android:gravity="center_horizontal"
+                        android:text="0" />
+
+                    <TextView
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:layout_width="0dp"
                         android:text="V" />
                 </TableRow>
 
                 <TableRow
                     android:layout_weight="1"
+                    android:layout_height="0dp"
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
-                        android:text="@string/text_row2_field" />
+                        android:textSize="9sp"
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
+                        android:text="@string/text_row4_field" />
 
                     <TextView
-
-                        android:id="@+id/text_CH1_Freq"
+                        android:id="@+id/text_CH2_Freq"
                         android:layout_weight="2"
                         android:textStyle="bold"
+                        android:layout_width="0dp"
                         android:gravity="center_horizontal"
                         android:text="0" />
 
                     <TextView
                         android:layout_weight="1"
                         android:gravity="center"
+                        android:layout_width="0dp"
                         android:text="Hz" />
                 </TableRow>
-
-
             </TableLayout>
 
             <TableLayout
@@ -114,83 +201,28 @@
                 android:showDividers="middle">
 
                 <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
-                        android:text="@string/text_row3_field" />
-
-                    <TextView
-                        android:layout_weight="2"
-                        android:id="@+id/text_CH2_VMax"
-                        android:textStyle="bold"
-                        android:gravity="center_horizontal"
-                        android:text="0" />
-
-                    <TextView
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="V" />
-                </TableRow>
-
-                <TableRow
-                    android:layout_weight="1"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
-                        android:text="@string/text_row4_field" />
-
-                    <TextView
-                        android:id="@+id/text_CH2_Freq"
-                        android:layout_weight="2"
-                        android:textStyle="bold"
-                        android:gravity="center_horizontal"
-                        android:text="0" />
-
-                    <TextView
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="Hz" />
-                </TableRow>
-            </TableLayout>
-
-            <TableLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="0.5"
-                android:divider="@drawable/divider_line"
-                android:showDividers="middle">
-
-                <TableRow
                     android:orientation="horizontal"
                     android:id="@+id/row5"
                     android:layout_weight="1"
+                    android:layout_height="0dp"
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="left"
-                        android:textSize="10sp"
-                        android:text="当前已读取" />
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
+                        android:textSize="9sp"
+                        android:text="@string/test_row5_field" />
 
                     <TextView
-                        android:layout_height="wrap_content"
-                        android:layout_weight="2"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:textSize="20sp"
                         android:id="@+id/text_has_trans"
+                        android:layout_weight="2"
+                        android:layout_width="0dp"
+                        android:textStyle="bold"
+                        android:gravity="center_horizontal"
+                        android:textSize="20sp"
                         android:text="0" />
 
                     <TextView
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:textStyle="bold"

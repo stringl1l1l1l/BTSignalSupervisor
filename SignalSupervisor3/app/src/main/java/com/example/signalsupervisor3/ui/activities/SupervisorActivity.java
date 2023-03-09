@@ -22,7 +22,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.signalsupervisor3.GlobalData;
@@ -43,6 +45,8 @@ import java.util.Arrays;
 public class SupervisorActivity extends AppCompatActivity {
     private static final String TAG = SupervisorActivity.class.getSimpleName();
     private static int BUFFER_SIZE = GlobalData.BUFFER_SIZE;
+    private static final byte FLAG_BEGIN = 0x00;
+    private static final byte FLAG_BLOCK = 0x01;
     private ConnectThread mConnectThread;
     private BluetoothSocket mBluetoothSocket;
     private ConnectedThread mConnectedThread;
@@ -83,6 +87,7 @@ public class SupervisorActivity extends AppCompatActivity {
         Button btnClearCh1 = findViewById(R.id.btn_clear_ch1);
         Button btnClearCh2 = findViewById(R.id.btn_clear_ch2);
         Button btnStopTrans = findViewById(R.id.btn_stop_trans);
+        Button btnVol1 = findViewById(R.id.btn_vol1);
         btnBeginTrans.setOnClickListener(new BeginTransListener());
         btnStopTrans.setOnClickListener(new StopTransListener());
         btnShowCh1.setOnClickListener(new ShowCH1Listener());
@@ -90,6 +95,24 @@ public class SupervisorActivity extends AppCompatActivity {
         btnDrawPoints.setOnClickListener(new DrawPointsListener());
         btnDrawLine.setOnClickListener(new DrawLineListener());
         btnClearBuffer.setOnClickListener(new ClearBufferListener());
+        btnVol1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText vol1 = findViewById(R.id.text_CH1_VMax);
+                String volStr = vol1.getText().toString();
+                if (volStr.matches("([0-9]+.[0-9]+)|[0-9]+"))
+                    GlobalData.sVMaxCh1 = Float.parseFloat(volStr);
+                else {
+                    GlobalData.sVMaxCh1 = 0;
+                    vol1.setText("0");
+                    showToast(SupervisorActivity.this, "非法输入");
+                }
+                vol1.clearFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(vol1.getWindowToken(), 0);
+                showToast(SupervisorActivity.this, "修改成功");
+            }
+        });
         btnClearCh1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -136,8 +159,14 @@ public class SupervisorActivity extends AppCompatActivity {
     private class StopTransListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            mConnectedThread.setStopped(true);
-            showToast(SupervisorActivity.this, "已暂停");
+            if (mConnectedThread != null) {
+                mConnectedThread.setStopped(true);
+                mConnectedThread.write(FLAG_BLOCK);
+                showToast(SupervisorActivity.this, "已暂停");
+            } else {
+                showToast(SupervisorActivity.this, "未创建连接");
+            }
+
         }
     }
 
@@ -242,12 +271,21 @@ public class SupervisorActivity extends AppCompatActivity {
     private String[][] phraseTwoStreamFromBuffer(String bufferStr) {
         if (bufferStr.length() > 0) {
             String[] split = bufferStr.split(GlobalData.SPLIT_REGEX);
-            String[] stream1 = new String[split.length / 2];
-            String[] stream2 = new String[split.length / 2];
+            int length = split.length;
+            // 如果split长度为奇数，将最后一个元素弹出
+            if ((length & 0x1) == 1)
+                length--;
+            String[] stream1 = new String[length / 2];
+            String[] stream2 = new String[length / 2];
+            Log.i("phraseTwoStreamFromBuffer" + ": buffer", bufferStr);
+            Log.i("phraseTwoStreamFromBuffer" + ": split", Arrays.toString(split));
+            Log.i("phraseTwoStreamFromBuffer" + ": split len", String.valueOf(split.length));
             int i = 0, p1 = 0, p2 = 0;
             //找到第一个有效的频率
-            while (!split[i].matches(GlobalData.FREQ_REGEX)) i++;
-            for (int j = i; j < split.length; ) {
+            while (i < length && !split[i].matches(GlobalData.FREQ_REGEX)) i++;
+            if (i == length)
+                return null;
+            for (int j = i; j < length; ) {
                 // 参数1 偶 频率
                 if (((j - i) & 0b1) == 0) {
                     if (split[j].matches(GlobalData.FREQ_REGEX))
@@ -264,8 +302,7 @@ public class SupervisorActivity extends AppCompatActivity {
                     }
                 }
             }
-            Log.i("phraseTwoStreamFromBuffer" + ": buffer", bufferStr);
-            Log.i("phraseTwoStreamFromBuffer" + ": split", Arrays.toString(split));
+
             Log.i("phraseTwoStreamFromBuffer" + ": 频率", Arrays.toString(stream1));
             Log.i("phraseTwoStreamFromBuffer" + "stream1 len", String.valueOf(stream1.length));
             Log.i("phraseTwoStreamFromBuffer" + ": 幅值", Arrays.toString(stream2));
@@ -299,6 +336,7 @@ public class SupervisorActivity extends AppCompatActivity {
                 //mConnectedThread.start();
                 GlobalData.sConnectedThreadExec.execute(mConnectedThread);
                 GlobalData.setConnectedThread(mConnectedThread);
+                mConnectedThread.write(FLAG_BEGIN);
                 showToast(this, "开始接收");
             }// 若本机作为服务端
             else if (type == Constant.SERVER_TYPE) {
@@ -308,12 +346,14 @@ public class SupervisorActivity extends AppCompatActivity {
                 //mConnectedThread.start();
                 GlobalData.sConnectedThreadExec.execute(mConnectedThread);
                 GlobalData.setConnectedThread(mConnectedThread);
+                mConnectedThread.write(FLAG_BEGIN);
                 showToast(this, "开始接收");
             } else {
                 Log.e(TAG, "连接未成功");
             }
         } else {
             mConnectedThread.resumeThread();
+            mConnectedThread.write(FLAG_BEGIN);
             showToast(this, "继续传输");
         }
     }
@@ -375,7 +415,7 @@ public class SupervisorActivity extends AppCompatActivity {
         public void onClick(View view) {
             CanvasView canvasView = findViewById(R.id.supervisor_canvas);
             if (canvasView.mFPoints != null && !canvasView.mFPoints.isEmpty())
-                canvasView.mFPoints = interpolate(canvasView.mFPoints, 0.00005);
+                canvasView.mFPoints = interpolate(getFPointsFromGlobal(), 0.00005);
             else
                 showToast(SupervisorActivity.this, "请先描点");
             canvasView.requestLayout();

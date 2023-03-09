@@ -49,7 +49,6 @@ public class ConnectedThread extends Thread {
 
     public void run() {
         // 持续监听InputStream，直到出现异常
-//        skipInputBuffer();
         while (true) {
             try {
                 if (this.isStopped) {
@@ -65,45 +64,36 @@ public class ConnectedThread extends Thread {
             } catch (Exception e) {
                 Log.e(TAG, "Error reading from socket", e);
                 setStopped(true);
-//                if (e.getMessage().equals("bt socket closed, read return: -1")) {
-//                    // 蓝牙已关闭，关闭连接并清理资源
-//                    try {
-//                        mmInStream.close();
-//                    } catch (IOException ex) {
-//                        Log.e(TAG, "Error closing input stream", ex);
-//                    }
-//                    try {
-//                        mmSocket.close();
-//                    } catch (IOException ex) {
-//                        Log.e(TAG, "Error closing socket", ex);
-//                    }
-//                    // 发送消息通知UI层activity蓝牙已关闭
-//                    mHandler.sendEmptyMessage(Constant.MSG_ERROR);
-//                } else {
-//                    // 其他异常，将其传递给UI层activity处理
-//                    Log.e(TAG, "Error reading from socket", e);
-//                    mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
+                if (e.getMessage().equals("bt socket closed, read return: -1")) {
+                    // 蓝牙已关闭，关闭连接并清理资源
+                    try {
+                        mmInStream.close();
+                    } catch (IOException ex) {
+                        Log.e(TAG, "Error closing input stream", ex);
+                    }
+                    try {
+                        mmSocket.close();
+                    } catch (IOException ex) {
+                        Log.e(TAG, "Error closing socket", ex);
+                    }
+                    // 发送消息通知UI层activity蓝牙已关闭
+                    mHandler.sendEmptyMessage(Constant.MSG_ERROR);
+                } else {
+                    // 其他异常，将其传递给UI层activity处理
+                    Log.e(TAG, "Error reading from socket", e);
+                    mHandler.sendMessage(mHandler.obtainMessage(Constant.MSG_ERROR, e));
 //                }
+                }
             }
         }
     }
 
-//    public void skipInputBuffer() {
-//        try {
-//            while (mmInStream.available() != 0) {
-//                mmInStream.readByte();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     /**
      * 在main中调用此函数，将数据发送到远端设备中
      */
-    public void write(byte[] bytes) {
+    public void write(byte b) {
         try {
-            mmOutStream.write(bytes);
+            mmOutStream.write(b);
         } catch (IOException e) {
             Log.e(TAG, "error", e);
         }
@@ -111,9 +101,9 @@ public class ConnectedThread extends Thread {
 
     public synchronized void resumeThread() {
         try {
+            isStopped = false;
             synchronized (this) {
                 notify();
-                isStopped = false;
             }
         } catch (Exception e) {
             Log.e(TAG, "error", e);

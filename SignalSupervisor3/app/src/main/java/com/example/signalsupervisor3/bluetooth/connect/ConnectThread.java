@@ -25,6 +25,7 @@ public class ConnectThread extends Thread {
     private static final String TAG = ConnectThread.class.getSimpleName();
     private final Handler mHandler;
     private BluetoothSocket mBluetoothSocket;
+    public boolean isStopped = false;
 
     public ConnectThread(BluetoothDevice device, Handler handler) {
         // U将一个临时对象分配给mmSocket，因为mmSocket是最终的
@@ -73,6 +74,21 @@ public class ConnectThread extends Thread {
         mHandler.sendEmptyMessage(Constant.MSG_CONNECTED_TO_SERVER);
     }
 
+    public void pause() {
+        synchronized (this) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void resumeThread() {
+        synchronized (this) {
+            this.notify();
+        }
+    }
 
     /**
      * 取消正在进行的连接并关闭socket

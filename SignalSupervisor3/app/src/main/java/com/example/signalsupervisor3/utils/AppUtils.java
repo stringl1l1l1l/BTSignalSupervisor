@@ -158,7 +158,7 @@ public class AppUtils {
             j = i + 1;
             FPoint head = res.get(i);
             float averageY = head.y;
-            while (j < res.size() && res.get(j).x == res.get(i).x) {
+            while (j < res.size() && Math.abs(res.get(j).x - res.get(i).x) < 0.01) {
                 averageY += res.get(j).y;
                 j++;
             }
